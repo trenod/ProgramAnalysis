@@ -207,11 +207,11 @@ from typing import Set
 class DataFlowAnalysis(ABC):
     def __init__(self, initial_state):
         self.initial_state = initial_state
-        killed = List(str)
-        generated = List(str)
-        list_of_nodes = List(Node)
-        label = 0
-        cfg = List((int, int))
+        self.killed = List(str)
+        self.generated = List(str)
+        self.list_of_nodes = List(Node)
+        self.label = 0
+        self.cfg = List((int, int))
 
     def initial_node(self):
         for node in self.list_of_nodes:
@@ -295,22 +295,28 @@ class DataFlowAnalysis(ABC):
         """
 
     @abstractmethod
-    def print_nodes(self, nodes, visited=None, level=0):
+    def print_nodes(self, node, nodes, visited=None, level=0):
         if (nodes is None) or (len(nodes) == 0):
             return
-        node = nodes[0]
-        nodes.remove(node)
+        
+        if node is not None:
+            currentnode = node
+        else: 
+            currentnode = nodes[0]
+            
+        nodes.remove(currentnode)
+            
         if visited is None:
             visited = set()
 
         # Add the current node to the visited set
-        visited.add(node)
+        visited.add(currentnode)
 
         indent = "  " * level
-        print(f"{indent}Node - Entry: {node.entry}, Exit: {node.exit}")
+        print(f"{indent}Node - Entry: {currentnode.entry}, Exit: {currentnode.exit}")
 
         # Iterate over successors
-        for succ in node.successors:
+        for succ in currentnode.successors:
             if succ not in visited:
                 self.print_nodes(succ, nodes, visited, level+1)
         
@@ -369,11 +375,10 @@ class ReachingDefinitions(DataFlowAnalysis):
             return set()      
 
     def create_nodes(self, stmt: Statement) -> [Node]:
-        #list_of_nodes = []
-        last_label = label
-        label = label + 1
+        #last_label = self.label
+        self.label = self.label + 1
         node = Node()
-        node.label = label
+        node.label = self.label
         self.list_of_nodes.append(node)
         node.stmt = stmt
         if isinstance(stmt, Assignment):
@@ -425,8 +430,8 @@ class ReachingDefinitions(DataFlowAnalysis):
                 succ.exit_state = succ.entry_state.copy()
                 self.analyze(succ, live)
 
-    def print_nodes(self, nodes):
-        return super().print_nodes(nodes)
+    def print_nodes(self, node, nodes, visited=None, level=0):
+        return super().print_nodes(node, nodes, visited=None, level=0)
 
 def main():
     # Create the initial state
@@ -441,7 +446,7 @@ def main():
     analysis.analyze(nodes)
     # Print out the results
     nodes_to_print = nodes.copy()
-    analysis.print_nodes(nodes_to_print)
+    analysis.print_nodes(None, nodes_to_print)
 
 if __name__ == "__main__":
     main()
