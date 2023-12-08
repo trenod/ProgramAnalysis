@@ -80,7 +80,7 @@ program = CompoundStatement([
     )
 ])
 
-print(program)
+#print(program)
 
 
 
@@ -96,7 +96,7 @@ increment_loop = CompoundStatement([
     )
 ])
 
-print(increment_loop)
+#print(increment_loop)
 
 
 # Program to set 'y' to 1 if 'x' is less than 5, otherwise set 'y' to 0
@@ -108,7 +108,7 @@ conditional_assignment = CompoundStatement([
     )
 ])
 
-print(conditional_assignment)
+#print(conditional_assignment)
 
 
 
@@ -131,7 +131,7 @@ nested_loops = CompoundStatement([
     )
 ])
 
-print(nested_loops)
+#print(nested_loops)
 
 
 
@@ -154,7 +154,7 @@ while_with_conditional = CompoundStatement([
     )
 ])
 
-print(while_with_conditional)
+#print(while_with_conditional)
 
 
 
@@ -166,8 +166,8 @@ class Node:
         self.kill = set()   # Expressions killed in this node
         self.entry = set()  # Assignments live at entry to this node
         self.exit = set()   # Assignments live at exit from this node
-        self.predecessors = [] # Predecessor nodes in the control flow graph
-        self.successors = []  # Successor nodes in the control flow graph
+        self.predecessors = list() # Predecessor nodes in the control flow graph
+        self.successors = list() # Successor nodes in the control flow graph
         self.entry_state = None  # Analysis state at entry to this node (used for chaotic iteration)
         self.exit_state = None  # Analysis state at exit from this node (used for chaotic iteration)
 
@@ -207,11 +207,11 @@ from typing import Set
 class DataFlowAnalysis(ABC):
     def __init__(self, initial_state):
         self.initial_state = initial_state
-        self.killed = List(str)
-        self.generated = List(str)
-        self.list_of_nodes = List(Node)
+        self.killed = list()
+        self.generated = list()
+        self.list_of_nodes = list()
         self.label = 0
-        self.cfg = List((int, int))
+        self.cfg = list((int, int))
 
     def initial_node(self):
         for node in self.list_of_nodes:
@@ -384,7 +384,7 @@ class ReachingDefinitions(DataFlowAnalysis):
         if isinstance(stmt, Assignment):
             #should i use a gen function for statement and one for expression?
             node.gen = self.gen_function(stmt.expression)
-            node.kill = self.kill_function(stmt.lhs)
+            node.kill = self.kill_function(stmt.variable)
         elif isinstance(stmt, WhileLoop):
             node.gen = self.gen_function(stmt.condition)
             # Create a node for the while loop body
