@@ -157,6 +157,55 @@ while_with_conditional = CompoundStatement([
 #print(while_with_conditional)
 
 
+import unittest
+
+class TestDynamicProgramStructure(unittest.TestCase):
+
+    def check_expression(self, expr):
+        if isinstance(expr, Variable):
+            self.assertIsInstance(expr.name, str)
+        elif isinstance(expr, Constant):
+            self.assertIsInstance(expr.value, int)
+        elif isinstance(expr, BinaryOperation):
+            self.assertIsInstance(expr.op, str)
+            self.check_expression(expr.left)
+            self.check_expression(expr.right)
+        else:
+            self.fail(f"Unknown Expression type: {type(expr)}")
+
+    def check_statement(self, stmt):
+        if isinstance(stmt, Assignment):
+            self.assertIsInstance(stmt.variable, Variable)
+            self.check_expression(stmt.variable)
+            self.check_expression(stmt.expression)
+        elif isinstance(stmt, WhileLoop):
+            self.check_expression(stmt.condition)
+            for s in stmt.body:
+                self.check_statement(s)
+        elif isinstance(stmt, IfThenElse):
+            self.check_expression(stmt.condition)
+            for s in stmt.true_branch:
+                self.check_statement(s)
+            for s in stmt.false_branch:
+                self.check_statement(s)
+        elif isinstance(stmt, CompoundStatement):
+            for s in stmt.statements:
+                self.check_statement(s)
+        else:
+            self.fail(f"Unknown Statement type: {type(stmt)}")
+
+    def test_arbitrary_program_structure(self):
+        programs = [program, increment_loop, conditional_assignment, nested_loops, while_with_conditional]
+        for program in programs:
+            #self.check_program(program)
+            self.assertIsInstance(program, CompoundStatement)
+            for stmt in program.statements:
+                self.check_statement(stmt)
+
+if __name__ == '__main__':
+    unittest.main()
+
+
 
 
 class Node:
