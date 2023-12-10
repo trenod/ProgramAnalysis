@@ -197,14 +197,14 @@ class TestDynamicProgramStructure(unittest.TestCase):
     def test_arbitrary_program_structure(self):
         programs = [program, increment_loop, conditional_assignment, nested_loops, while_with_conditional]
         for prog in programs:
-            #self.check_program(program)
             self.assertIsInstance(prog, CompoundStatement)
             for stmt in prog.statements:
                 self.check_statement(stmt)
 
+'''
 if __name__ == '__main__':
     unittest.main()
-
+'''
 
 
 
@@ -483,6 +483,8 @@ class ReachingDefinitions(DataFlowAnalysis):
         return super().print_nodes(node, nodes, visited=None, level=0)
 
 def main():
+    # Check input programs
+    unittest.main() 
     # Create the initial state
     initial_state = set()
     # Create the analysis object
