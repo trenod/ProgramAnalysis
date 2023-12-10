@@ -80,10 +80,6 @@ program = CompoundStatement([
     )
 ])
 
-#print(program)
-
-
-
 
 # Program to increment 'x' until it is less than 10
 increment_loop = CompoundStatement([
@@ -96,8 +92,6 @@ increment_loop = CompoundStatement([
     )
 ])
 
-#print(increment_loop)
-
 
 # Program to set 'y' to 1 if 'x' is less than 5, otherwise set 'y' to 0
 conditional_assignment = CompoundStatement([
@@ -107,10 +101,6 @@ conditional_assignment = CompoundStatement([
         [Assignment(Variable('y'), Constant(0))]  # ELSE y := 0
     )
 ])
-
-#print(conditional_assignment)
-
-
 
 
 # Program to increment 'x' and 'y' in nested loops
@@ -131,11 +121,6 @@ nested_loops = CompoundStatement([
     )
 ])
 
-#print(nested_loops)
-
-
-
-
 
 # Program that decrements 'x' and if 'x' is odd, increments 'y'
 while_with_conditional = CompoundStatement([
@@ -153,8 +138,6 @@ while_with_conditional = CompoundStatement([
         ]
     )
 ])
-
-#print(while_with_conditional)
 
 
 import unittest
@@ -211,6 +194,7 @@ if __name__ == '__main__':
 class Node:
     def __init__(self):
         self.label = None   # Label for this node in the control flow graph
+        self.stmt = None    # Statement represented by this node
         self.gen = set()    # Expressions generated in this node
         self.kill = set()   # Expressions killed in this node
         self.entry = set()  # Assignments live at entry to this node
@@ -220,12 +204,18 @@ class Node:
         self.entry_state = None  # Analysis state at entry to this node (used for chaotic iteration)
         self.exit_state = None  # Analysis state at exit from this node (used for chaotic iteration)
 
+    def __iter__(self):
+        current = self.head
+        while current is not None:
+            yield current
+            current = current.next
+
     def __repr__(self):
         return f"Node(use={self.use}, entry={self.entry}, exit={self.exit})"
     
-    #def add_successor(self, node):
-    #    self.successors.append(node)
-    #    node.predecessors.append(self)
+    def add_successor(self, node):
+        self.successors.append(node)
+        node.predecessors.append(self)
 
 
 # Example usage:
@@ -371,11 +361,6 @@ class DataFlowAnalysis(ABC):
         
 
 
-        
-
-
-
-
 # Reaching definitions analysis     
 class ReachingDefinitions(DataFlowAnalysis):
     def __init__(self, initial_state):
@@ -429,16 +414,20 @@ class ReachingDefinitions(DataFlowAnalysis):
         node = Node()
         node.label = self.label
         self.list_of_nodes.append(node)
-        node.stmt = stmt
         if isinstance(stmt, Assignment):
             #should i use a gen function for statement and one for expression?
             node.gen = self.gen_function(stmt.expression)
             node.kill = self.kill_function(stmt.variable)
+            #trying something
+            node.stmt = stmt
+            node.exit = node.gen | (node.entry - node.kill)
         elif isinstance(stmt, WhileLoop):
             node.gen = self.gen_function(stmt.condition)
             # Create a node for the while loop body
             for body_stmt in stmt.body:
                 body_node = self.create_nodes(body_stmt)
+                #need to iterate through body_node which might 
+                # be a list?
                 node.successors.append(body_node)
                 body_node.predecessors.append(node)
             # The last node in the body has a successor of the while loop node itself to represent the loop
@@ -449,8 +438,8 @@ class ReachingDefinitions(DataFlowAnalysis):
             true_node = self.create_nodes(CompoundStatement(stmt.true_branch))
             false_node = self.create_nodes(CompoundStatement(stmt.false_branch))
             node.successors.extend([true_node, false_node])
-            true_node.predecessors = node
-            false_node.predecessors = node
+            true_node.predecessors.append(node)
+            false_node.predecessors.append(node)
         elif isinstance(stmt, CompoundStatement):
             for inner_stmt in stmt.statements:
                 inner_node = self.create_nodes(inner_stmt)
@@ -483,8 +472,9 @@ class ReachingDefinitions(DataFlowAnalysis):
         return super().print_nodes(node, nodes, visited=None, level=0)
 
 def main():
-    # Check input programs
-    unittest.main() 
+    # Uncomment below to test programs
+    #unittest.main() 
+
     # Create the initial state
     initial_state = set()
     # Create the analysis object
@@ -495,8 +485,9 @@ def main():
     analysis.create_cfg()
     # Perform the analysis
     analysis.analyze(nodes)
-    # Print out the results
+    # Copy the nodes to print
     nodes_to_print = nodes.copy()
+    # Print out the results
     analysis.print_nodes(None, nodes_to_print)
 
 if __name__ == "__main__":
