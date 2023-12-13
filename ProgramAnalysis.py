@@ -31,6 +31,13 @@ class BinaryOperation(Expression):
 class Statement:
     pass
 
+class CompoundStatement(Statement):
+    def __init__(self, statements: List[Statement]):
+        self.statements = statements
+
+    def __repr__(self):
+        return f"CompoundStatement({self.statements})"
+
 class Assignment(Statement):
     def __init__(self, variable: Variable, expression: Expression):
         self.variable = variable
@@ -40,7 +47,7 @@ class Assignment(Statement):
         return f"Assignment({self.variable}, {self.expression})"
 
 class WhileLoop(Statement):
-    def __init__(self, condition: Expression, body: List[Statement]):
+    def __init__(self, condition: Expression, body: CompoundStatement):
         self.condition = condition
         self.body = body
 
@@ -48,7 +55,7 @@ class WhileLoop(Statement):
         return f"WhileLoop({self.condition}, {self.body})"
 
 class IfThenElse(Statement):
-    def __init__(self, condition: Expression, true_branch: List[Statement], false_branch: List[Statement]):
+    def __init__(self, condition: Expression, true_branch: CompoundStatement, false_branch: CompoundStatement):
         self.condition = condition
         self.true_branch = true_branch
         self.false_branch = false_branch
@@ -56,12 +63,6 @@ class IfThenElse(Statement):
     def __repr__(self):
         return f"IfThenElse({self.condition}, {self.true_branch}, {self.false_branch})"
 
-class CompoundStatement(Statement):
-    def __init__(self, statements: List[Statement]):
-        self.statements = statements
-
-    def __repr__(self):
-        return f"CompoundStatement({self.statements})"
 
 # Example usage:
 # Represents the following WHILE program:
@@ -473,7 +474,7 @@ class ReachingDefinitions(DataFlowAnalysis):
 
 def main():
     # Uncomment below to test programs
-    #unittest.main() 
+    unittest.main() 
 
     # Create the initial state
     initial_state = set()
