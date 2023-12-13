@@ -71,17 +71,6 @@ class IfThenElse(Statement):
 #   x := x + 1
 # END
 
-program = CompoundStatement([
-    Assignment(Variable('x'), Constant(1)),
-    WhileLoop(
-        BinaryOperation('<', Variable('x'), Constant(10)),
-        [
-            Assignment(Variable('x'), BinaryOperation('+', Variable('x'), Constant(1)))
-        ]
-    )
-])
-
-
 # Program to increment 'x' until it is less than 10
 increment_loop = CompoundStatement([
     Assignment(Variable('x'), Constant(0)),  # x := 0;
@@ -179,17 +168,11 @@ class TestDynamicProgramStructure(unittest.TestCase):
             self.fail(f"Unknown Statement type: {type(stmt)}")
 
     def test_arbitrary_program_structure(self):
-        programs = [program, increment_loop, conditional_assignment, nested_loops, while_with_conditional]
+        programs = [increment_loop, conditional_assignment, nested_loops, while_with_conditional]
         for prog in programs:
             self.assertIsInstance(prog, CompoundStatement)
             for stmt in prog.statements:
                 self.check_statement(stmt)
-
-'''
-if __name__ == '__main__':
-    unittest.main()
-'''
-
 
 
 class Node:
@@ -217,28 +200,6 @@ class Node:
     def add_successor(self, node):
         self.successors.append(node)
         node.predecessors.append(self)
-
-
-# Example usage:
-# Create nodes from the live_program
-#nodes = create_nodes(live_program)
-
-# Print out the live variables at entry and exit of each node
-'''
-def print_nodes(node: Node, level=0):
-    indent = "  " * level
-    print(f"{indent}Node - Entry: {node.entry}, Exit: {node.exit}")
-    for succ in node.successors:
-        print_nodes(succ, level+1)
-
-
-#print_nodes(nodes)
-
-def print_nodes(node: Node, visited=None, level=0):
-    print("Results of analysis:\n")
-    for node in nodes:
-        print(f"\tfor node', {node.label}, 'entry state is', {node.entry_state}, 'exit state is', {node.exit_state}\n")
-'''
 
 
 from abc import ABC, abstractmethod
@@ -474,7 +435,7 @@ class ReachingDefinitions(DataFlowAnalysis):
 
 def main():
     # Uncomment below to test programs
-    unittest.main() 
+    #unittest.main() 
 
     # Create the initial state
     initial_state = set()
