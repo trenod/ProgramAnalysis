@@ -442,7 +442,7 @@ def main():
     # Create the analysis object
     analysis = ReachingDefinitions(initial_state)
     # Create the nodes from the program
-    nodes = analysis.create_nodes(program)
+    nodes = analysis.create_nodes(increment_loop)
     # Create the control flow graph
     analysis.create_cfg()
     # Perform the analysis
