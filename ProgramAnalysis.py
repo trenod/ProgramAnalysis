@@ -179,6 +179,7 @@ class Node:
     def __init__(self):
         self.label = None   # Label for this node in the control flow graph
         self.stmt = None    # Statement represented by this node
+        self.expression = None # Expression represented by this node
         self.gen = set()    # Expressions generated in this node
         self.kill = set()   # Expressions killed in this node
         self.entry = set()  # Assignments live at entry to this node
@@ -433,9 +434,80 @@ class ReachingDefinitions(DataFlowAnalysis):
     def print_nodes(self, node, nodes, visited=None, level=0):
         return super().print_nodes(node, nodes, visited=None, level=0)
 
+
+class AvailableExpressionsAnalysis:
+
+    def __init__(self) -> None:
+        FV = set()
+        self.FV = FV
+        self.label = 0
+        self.cfg = list((int, int))
+        self.nodes = list(Node)
+
+    def create_cfg(self, program: Statement) -> list((int, int)):
+        self.assertIsInstance(program, CompoundStatement)
+        for stmt in program.statements:
+            self.create_cfg_statement(stmt)
+        return self.cfg
+
+
+    def create_cfg_expression(self, expr):
+        if isinstance(expr, Variable):
+            self.assertIsInstance(expr.name, str)
+        elif isinstance(expr, Constant):
+            self.assertIsInstance(expr.value, int)
+        elif isinstance(expr, BinaryOperation):
+            self.label = self.label + 1
+            node = Node()
+            node.label = self.label
+            node.expression = expr
+            self.nodes.append(node)
+            self.assertIsInstance(expr.op, str)
+            self.check_expression(expr.left)
+            self.check_expression(expr.right)
+        
+    def create_cfg_statement(self, stmt):
+        if isinstance(stmt, Assignment):
+            self.label = self.label + 1
+            node = Node()
+            node.label = self.label
+            node.stmt = stmt
+            self.nodes.append(node)
+            self.assertIsInstance(stmt.variable, Variable)
+            if stmt.variable.name not in self.FV:
+                self.FV.add(stmt.variable.name)
+            self.check_expression(stmt.variable)
+            self.check_expression(stmt.expression)
+        elif isinstance(stmt, WhileLoop):
+            self.create_cfg_expression(stmt.condition)
+            for s in stmt.body:
+                self.create_cfg_statement(s)
+        elif isinstance(stmt, IfThenElse):
+            self.create_cfg_expression(stmt.condition)
+            for s in stmt.true_branch:
+                self.create_cfg_statement(s)
+            for s in stmt.false_branch:
+                self.create_cfg_statement(s)
+        elif isinstance(stmt, CompoundStatement):
+            for s in stmt.statements:
+                self.create_cfg_statement(s)
+        
+        
+
+
+
+
+
 def main():
     # Uncomment below to test programs
     #unittest.main() 
+
+    #Available expressions analysis:
+
+
+
+    '''
+    Reaching definitions analysis:
 
     # Create the initial state
     initial_state = set()
@@ -451,6 +523,7 @@ def main():
     nodes_to_print = nodes.copy()
     # Print out the results
     analysis.print_nodes(None, nodes_to_print)
+    '''
 
 if __name__ == "__main__":
     main()
