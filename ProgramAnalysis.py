@@ -441,7 +441,7 @@ class ReachingDefinitions(DataFlowAnalysis):
 class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
-        FV = set()
+        FV = set((str, int)) #set of free variables, first the variable, then label of the node where it is defined
         self.FV = FV
         self.label = 0
         self.cfg = list((int, int))
