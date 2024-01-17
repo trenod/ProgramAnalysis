@@ -184,10 +184,13 @@ class Node:
         self.kill = set()   # Expressions killed in this node
         self.entry = set()  # Assignments live at entry to this node
         self.exit = set()   # Assignments live at exit from this node
+        self.while_loop_number = None # Number of the while loop this node belongs to
+        self.first_node_in_while = False # True if this node is the first node in a while loop
+        self.last_node_in_while = False # True if this node is the last node in a while loop
         self.predecessors = list() # Predecessor nodes in the control flow graph
         self.successors = list() # Successor nodes in the control flow graph
-        self.entry_state = None  # Analysis state at entry to this node (used for chaotic iteration)
-        self.exit_state = None  # Analysis state at exit from this node (used for chaotic iteration)
+        self.entry_state = set()  # Analysis state at entry to this node (used for chaotic iteration)
+        self.exit_state = set()  # Analysis state at exit from this node (used for chaotic iteration)
 
     def __iter__(self):
         current = self.head
