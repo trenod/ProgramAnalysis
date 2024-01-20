@@ -441,7 +441,8 @@ class ReachingDefinitions(DataFlowAnalysis):
 class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
-        FV = set((str, int)) #set of free variables, first the variable, then label of the node where it is defined
+        #FV = list((set(str), int)) #set of free variables, first the variable, then label of the node where it is defined
+        FV = list((Assignment, int)) #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.FV = FV
         self.label = 0
         self.cfg = list((int, int))
@@ -465,9 +466,9 @@ class AvailableExpressionsAnalysis:
             node.label = self.label
             node.expression = expr
             self.nodes.append(node)
-            self.assertIsInstance(expr.op, str)
-            self.check_expression(expr.left)
-            self.check_expression(expr.right)
+            #self.assertIsInstance(expr.op, str)
+            #self.check_expression(expr.left)
+            #self.check_expression(expr.right)
         
     def create_cfg_statement(self, stmt):
         if isinstance(stmt, Assignment):
@@ -475,12 +476,16 @@ class AvailableExpressionsAnalysis:
             node = Node()
             node.label = self.label
             node.stmt = stmt
+            if stmt not in self.FV:
+                self.FV.add(stmt)
             self.nodes.append(node)
             self.assertIsInstance(stmt.variable, Variable)
-            if stmt.variable.name not in self.FV:
-                self.FV.add(stmt.variable.name)
-            self.check_expression(stmt.variable)
-            self.check_expression(stmt.expression)
+            #if stmt.variable.name not in self.FV:
+            #    self.FV.add(stmt.variable.name)
+            self.create_cfg_expression(stmt.variable)
+            self.create_cfg_expression(stmt.expression)
+            #self.check_expression(stmt.variable)
+            #self.check_expression(stmt.expression)
         elif isinstance(stmt, WhileLoop):
             self.create_cfg_expression(stmt.condition)
             for s in stmt.body:
