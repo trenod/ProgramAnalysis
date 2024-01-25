@@ -442,18 +442,19 @@ class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
         #FV = list((set(str), int)) #set of free variables, first the variable, then label of the node where it is defined
-        FV = list((Assignment, int)) #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
-        self.FV = FV
+        self.FV = list((Assignment, int)) #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.label = 0
         self.cfg = list((int, int))
         self.nodes = list(Node)
+        self.previous_node_label = 0
+        self.is_while_loop = False
 
     def create_cfg(self, program: Statement) -> list((int, int)):
         self.assertIsInstance(program, CompoundStatement)
         for stmt in program.statements:
             self.create_cfg_statement(stmt)
         return self.cfg
-
+    
 
     def create_cfg_expression(self, expr):
         if isinstance(expr, Variable):
@@ -466,9 +467,7 @@ class AvailableExpressionsAnalysis:
             node.label = self.label
             node.expression = expr
             self.nodes.append(node)
-            #self.assertIsInstance(expr.op, str)
-            #self.check_expression(expr.left)
-            #self.check_expression(expr.right)
+
         
     def create_cfg_statement(self, stmt):
         if isinstance(stmt, Assignment):
@@ -476,20 +475,21 @@ class AvailableExpressionsAnalysis:
             node = Node()
             node.label = self.label
             node.stmt = stmt
+            self.cfg.append((self.previous_node_label, node.label))
+            self.previous_node_label = node.label
             if stmt not in self.FV:
-                self.FV.add(stmt)
+                self.FV.append((stmt, node.label))
+                node.gen = stmt
             self.nodes.append(node)
             self.assertIsInstance(stmt.variable, Variable)
-            #if stmt.variable.name not in self.FV:
-            #    self.FV.add(stmt.variable.name)
             self.create_cfg_expression(stmt.variable)
             self.create_cfg_expression(stmt.expression)
-            #self.check_expression(stmt.variable)
-            #self.check_expression(stmt.expression)
         elif isinstance(stmt, WhileLoop):
+            is_while_loop = True
             self.create_cfg_expression(stmt.condition)
             for s in stmt.body:
                 self.create_cfg_statement(s)
+            is_while_loop = False
         elif isinstance(stmt, IfThenElse):
             self.create_cfg_expression(stmt.condition)
             for s in stmt.true_branch:
@@ -499,6 +499,17 @@ class AvailableExpressionsAnalysis:
         elif isinstance(stmt, CompoundStatement):
             for s in stmt.statements:
                 self.create_cfg_statement(s)
+
+    
+    def create_cfg_while(self, stmt):
+        for i in range(0, len(stmt.body)):
+            if (i == 0):
+                self.create_cfg_expression(stmt.condition)
+            elif (i == len(stmt.body) - 1):
+                self.create_cfg_expression(stmt.body[i])
+                self.create_cfg_statement(stmt.body[i])
+                
+                
         
         
 
