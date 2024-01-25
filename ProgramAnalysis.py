@@ -457,25 +457,27 @@ class AvailableExpressionsAnalysis:
     
 
     def create_cfg_expression(self, expr):
+        self.label = self.label + 1
+        self.cfg.append((self.previous_node_label, node.label))
         if isinstance(expr, Variable):
             self.assertIsInstance(expr.name, str)
         elif isinstance(expr, Constant):
             self.assertIsInstance(expr.value, int)
         elif isinstance(expr, BinaryOperation):
-            self.label = self.label + 1
             node = Node()
             node.label = self.label
             node.expression = expr
             self.nodes.append(node)
+        self.previous_node_label = node.label
 
         
     def create_cfg_statement(self, stmt):
+        self.label = self.label + 1
+        self.cfg.append((self.previous_node_label, node.label))
         if isinstance(stmt, Assignment):
-            self.label = self.label + 1
             node = Node()
             node.label = self.label
             node.stmt = stmt
-            self.cfg.append((self.previous_node_label, node.label))
             self.previous_node_label = node.label
             if stmt not in self.FV:
                 self.FV.append((stmt, node.label))
@@ -499,6 +501,7 @@ class AvailableExpressionsAnalysis:
         elif isinstance(stmt, CompoundStatement):
             for s in stmt.statements:
                 self.create_cfg_statement(s)
+        self.previous_node_label = node.label
 
     
     def create_cfg_while(self, stmt):
