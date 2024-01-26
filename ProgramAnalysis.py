@@ -189,8 +189,8 @@ class Node:
         self.last_node_in_while = False # True if this node is the last node in a while loop
         self.predecessors = list() # Predecessor nodes in the control flow graph
         self.successors = list() # Successor nodes in the control flow graph
-        self.coming_in_to = list() # List of nodes coming in from in the control flow graph
-        self.going_out_from = list() # List of nodes going out to in the control flow graph
+        self.coming_in = list() # List of nodes coming in from in the control flow graph
+        self.going_out = list() # List of nodes going out to in the control flow graph
         self.entry_state = set()  # Analysis state at entry to this node (used for chaotic iteration)
         self.exit_state = set()  # Analysis state at exit from this node (used for chaotic iteration)
 
@@ -452,18 +452,21 @@ class AvailableExpressionsAnalysis:
         self.is_first_node_in_while = False
         self.is_last_node_in_while = False
         self.first_node_in_while = []
+        self.first_node = None
+        self.was_last_node_in_while = False
         self.last_node_in_while = []
+        self.last_node = None
         self.current_node = None
         self.previous_node = None
 
-
+    # Create the CFG as well as the nodes containing necessary information for doing an analysis (can later move to superclass)
     def create_cfg(self, program: Statement) -> list((int, int)):
         self.assertIsInstance(program, CompoundStatement)
         for stmt in program.statements:
             self.create_cfg_statement(stmt)
         return self.cfg
     
-
+    # Dealing with expressions
     def create_cfg_expression(self, expr):
         self.label = self.label + 1
         self.cfg.append((self.previous_node_label, node.label))
@@ -481,7 +484,7 @@ class AvailableExpressionsAnalysis:
                 self.is_first_node_in_while = False
         self.previous_node_label = node.label
 
-        
+    # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt):
         self.label = self.label + 1
         if isinstance(stmt, Assignment):
@@ -494,7 +497,11 @@ class AvailableExpressionsAnalysis:
                 self.FV.append((stmt, node.label))
                 node.gen = stmt
             self.nodes.append(node)
-            self.assertIsInstance(stmt.variable, Variable)
+
+            if (self.is_last_node_in_while):
+                self.last_node_in_while.append(node)
+                self.is_last_node_in_while = True
+            #self.assertIsInstance(stmt.variable, Variable)
             self.create_cfg_expression(stmt.variable)
             self.create_cfg_expression(stmt.expression)
         elif isinstance(stmt, WhileLoop):
@@ -507,6 +514,7 @@ class AvailableExpressionsAnalysis:
                     self.is_last_node_in_while = True
                 self.create_cfg_statement(s)
             is_while_loop = False
+            was_last_node_in_while = True
         elif isinstance(stmt, IfThenElse):
             self.create_cfg_expression(stmt.condition)
             for s in stmt.true_branch:
@@ -517,10 +525,26 @@ class AvailableExpressionsAnalysis:
             for s in stmt.statements:
                 self.create_cfg_statement(s)
 
+        # Logic for dealing with While loops:
+        if (self.is_first_node_in_while):
+            self.first_node_in_while.append(node)
         if (self.is_last_node_in_while):
-            first_node = self.first_node_in_while.pop()
-            self.cfg.append((self.previous_node_label, first_node.label))
+            self.last_node_in_while.append(node)
+            #self.is_last_node_in_while = False
+        if (self.was_last_node_in_while):
+            was_first_node_in_while = self.first_node_in_while.pop()
+            was_last_node_in_while = self.last_node_in_while.pop()
+            self.cfg.append((was_first_node_in_while.label, node.label))
+            node.coming_in.append(was_first_node_in_while)
+            self.is_first_node_in_while.going_out.append(node)
+            self.cfg.append((was_last_node_in_while.label, node.label))
+            node.coming_in.append(was_last_node_in_while)
+            self.is_last_node_in_while.going_out.append(node)
+            self.was_last_node_in_while = False
+        # Logic for dealing with other nodes:
         self.cfg.append((self.previous_node_label, node.label))
+        node.coming_in.append(self.previous_node)
+        self.previous_node.going_out.append(node)
 
         self.previous_node = node
         self.previous_node_label = node.label
