@@ -441,7 +441,6 @@ class ReachingDefinitions(DataFlowAnalysis):
 class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
-        #FV = list((set(str), int)) #set of free variables, first the variable, then label of the node where it is defined
         self.FV = list((Assignment, int)) #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.label = 0
         self.cfg = list((int, int))
@@ -450,9 +449,10 @@ class AvailableExpressionsAnalysis:
         self.is_while_loop = False
         self.is_first_node_in_while = False
         self.is_last_node_in_while = False
-        self.first_node_in_while = None
-        self.last_node_in_while = None
+        self.first_node_in_while = []
+        self.last_node_in_while = []
         self.current_node = None
+
 
     def create_cfg(self, program: Statement) -> list((int, int)):
         self.assertIsInstance(program, CompoundStatement)
@@ -474,22 +474,19 @@ class AvailableExpressionsAnalysis:
             node.expression = expr
             self.nodes.append(node)
             if (self.is_first_node_in_while):
-                self.first_node_in_while = node
+                self.first_node_in_while.append(node)
                 self.is_first_node_in_while = False
         self.previous_node_label = node.label
 
         
     def create_cfg_statement(self, stmt):
         self.label = self.label + 1
-        if (self.is_last_node_in_while):
-            self.cfg.append((self.previous_node_label, self.first_node_in_while.label))
-        self.cfg.append((self.previous_node_label, node.label))
         if isinstance(stmt, Assignment):
             node = Node()
             node.label = self.label
             node.stmt = stmt
             self.current_node = node
-            #self.previous_node_label = node.label
+            #this can be moved to the analysis function:
             if stmt not in self.FV:
                 self.FV.append((stmt, node.label))
                 node.gen = stmt
@@ -516,9 +513,15 @@ class AvailableExpressionsAnalysis:
         elif isinstance(stmt, CompoundStatement):
             for s in stmt.statements:
                 self.create_cfg_statement(s)
+
+        if (self.is_last_node_in_while):
+            first_node = self.first_node_in_while.pop()
+            self.cfg.append((self.previous_node_label, first_node.label))
+        self.cfg.append((self.previous_node_label, node.label))
+
         self.previous_node_label = node.label
 
-    
+    #this function is not needed currently
     def create_cfg_while(self, stmt):
         for i in range(0, len(stmt.body)):
             if (i == 0):
