@@ -189,6 +189,8 @@ class Node:
         self.last_node_in_while = False # True if this node is the last node in a while loop
         self.predecessors = list() # Predecessor nodes in the control flow graph
         self.successors = list() # Successor nodes in the control flow graph
+        self.coming_in_to = list() # List of nodes coming in from in the control flow graph
+        self.going_out_from = list() # List of nodes going out to in the control flow graph
         self.entry_state = set()  # Analysis state at entry to this node (used for chaotic iteration)
         self.exit_state = set()  # Analysis state at exit from this node (used for chaotic iteration)
 
@@ -452,6 +454,7 @@ class AvailableExpressionsAnalysis:
         self.first_node_in_while = []
         self.last_node_in_while = []
         self.current_node = None
+        self.previous_node = None
 
 
     def create_cfg(self, program: Statement) -> list((int, int)):
@@ -519,6 +522,7 @@ class AvailableExpressionsAnalysis:
             self.cfg.append((self.previous_node_label, first_node.label))
         self.cfg.append((self.previous_node_label, node.label))
 
+        self.previous_node = node
         self.previous_node_label = node.label
 
     #this function is not needed currently
