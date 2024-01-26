@@ -482,7 +482,7 @@ class AvailableExpressionsAnalysis:
             if (self.is_first_node_in_while):
                 self.first_node_in_while.append(node)
                 self.is_first_node_in_while = False
-        self.previous_node_label = node.label
+        #self.previous_node_label = node.label
 
     # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt):
@@ -541,13 +541,13 @@ class AvailableExpressionsAnalysis:
             node.coming_in.append(was_last_node_in_while)
             self.is_last_node_in_while.going_out.append(node)
             self.was_last_node_in_while = False
+
         # Logic for dealing with other nodes:
         self.cfg.append((self.previous_node_label, node.label))
         node.coming_in.append(self.previous_node)
         self.previous_node.going_out.append(node)
-
         self.previous_node = node
-        self.previous_node_label = node.label
+        #self.previous_node_label = node.label
 
     #this function is not needed currently
     def create_cfg_while(self, stmt):
