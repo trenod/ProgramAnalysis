@@ -448,6 +448,11 @@ class AvailableExpressionsAnalysis:
         self.nodes = list(Node)
         self.previous_node_label = 0
         self.is_while_loop = False
+        self.is_first_node_in_while = False
+        self.is_last_node_in_while = False
+        self.first_node_in_while = None
+        self.last_node_in_while = None
+        self.current_node = None
 
     def create_cfg(self, program: Statement) -> list((int, int)):
         self.assertIsInstance(program, CompoundStatement)
@@ -468,17 +473,23 @@ class AvailableExpressionsAnalysis:
             node.label = self.label
             node.expression = expr
             self.nodes.append(node)
+            if (self.is_first_node_in_while):
+                self.first_node_in_while = node
+                self.is_first_node_in_while = False
         self.previous_node_label = node.label
 
         
     def create_cfg_statement(self, stmt):
         self.label = self.label + 1
+        if (self.is_last_node_in_while):
+            self.cfg.append((self.previous_node_label, self.first_node_in_while.label))
         self.cfg.append((self.previous_node_label, node.label))
         if isinstance(stmt, Assignment):
             node = Node()
             node.label = self.label
             node.stmt = stmt
-            self.previous_node_label = node.label
+            self.current_node = node
+            #self.previous_node_label = node.label
             if stmt not in self.FV:
                 self.FV.append((stmt, node.label))
                 node.gen = stmt
@@ -490,6 +501,10 @@ class AvailableExpressionsAnalysis:
             is_while_loop = True
             self.create_cfg_expression(stmt.condition)
             for s in stmt.body:
+                if (s == stmt.body[0]):
+                    self.is_first_node_in_while = True
+                elif (s == stmt.body[-1]):
+                    self.is_last_node_in_while = True
                 self.create_cfg_statement(s)
             is_while_loop = False
         elif isinstance(stmt, IfThenElse):
@@ -512,6 +527,12 @@ class AvailableExpressionsAnalysis:
                 self.create_cfg_expression(stmt.body[i])
                 self.create_cfg_statement(stmt.body[i])
                 
+    def analyze(self, nodes: list, cfg: list): #nodes: list of nodes, cfg: control flow graph
+        for node in nodes:
+            if node.label == 1:
+                node.entry = self.initial_state
+                node.exit = self.initial_state
+                self.analyze_node(node, cfg)
                 
         
         
