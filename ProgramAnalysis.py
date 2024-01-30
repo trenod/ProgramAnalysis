@@ -563,7 +563,7 @@ class AvailableExpressionsAnalysis:
             if node.expression is not None:
                 if node.expression in self.FV:
                     node.gen = node.expression
-                    
+
             elif node.stmt is not None:
                 if node.stmt not in self.FV:
                     self.FV.append((node.stmt, node.label))
@@ -580,13 +580,16 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
     def __init__(self) -> None:
         self.cfg = None
         self.previous_node = None
+        self.nodes = None
 
     def setUp(self):
         # Code here will run before each test method
         analysis = AvailableExpressionsAnalysis()
         self.cfg = analysis.create_cfg(increment_loop)
+        self.nodes = analysis.nodes
 
     def test_create_cfg(self):
+        self.previous_node = self.cfg[0]
         for node in self.cfg:
             # Check if the node is a tuple
             isinstance(node, tuple)
@@ -597,6 +600,15 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
 
     def test_nodes(self):
         self.assertEqual(len(self.cfg), len(self.nodes))
+        for node in self.nodes:
+            print("Node with label {node.label} has the following information: \n")
+            print("Statement: {node.stmt}\n")
+            print("Expression: {node.expression}\n")
+            print("Predecessors: {node.predecessors}\n")
+            print("Successors: {node.successors}\n")
+            print("Generated expressions: {node.gen}\n")
+            print("Killed expressions: {node.kill}\n")
+
 
     def analysis(self):
         pass
