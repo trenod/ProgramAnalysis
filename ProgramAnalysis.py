@@ -569,6 +569,27 @@ class AvailableExpressionsAnalysis:
         
 
 
+class TestAvailableExpressionsAnalysis(unittest.TestCase):
+    def __init__(self) -> None:
+        self.cfg = None
+        self.previous_node = None
+
+    def setUp(self):
+        # Code here will run before each test method
+        analysis = AvailableExpressionsAnalysis()
+        self.cfg = analysis.create_cfg(increment_loop)
+
+    def test_create_cfg(self):
+        for node in self.cfg:
+            # Check if the node is a tuple
+            isinstance(node, tuple)
+            print(node)
+            # Check if successor node has a higher label 
+            self.assertLessEqual(self.previous_node, node)
+            self.previous_node = node
+
+    def test_nodes(self):
+        pass
 
 
 
@@ -600,4 +621,5 @@ def main():
     '''
 
 if __name__ == "__main__":
+    unittest.main()
     main()
