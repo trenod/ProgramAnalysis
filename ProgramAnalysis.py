@@ -560,10 +560,17 @@ class AvailableExpressionsAnalysis:
                 
     def analyze(self, nodes: list, cfg: list): #nodes: list of nodes, cfg: control flow graph
         for node in nodes:
-            if node.label == 1:
-                node.entry = self.initial_state
-                node.exit = self.initial_state
-                self.analyze_node(node, cfg)
+            if node.expression is not None:
+                if node.expression in self.FV:
+                    node.gen = node.expression
+                    
+            elif node.stmt is not None:
+                if node.stmt not in self.FV:
+                    self.FV.append((node.stmt, node.label))
+                    node.gen = node.stmt
+                else:
+                    node.kill = node.stmt
+                
                 
         
         
@@ -589,7 +596,11 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             self.previous_node = node
 
     def test_nodes(self):
+        self.assertEqual(len(self.cfg), len(self.nodes))
+
+    def analysis(self):
         pass
+    
 
 
 
