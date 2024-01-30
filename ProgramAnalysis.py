@@ -1,179 +1,5 @@
 from typing import List, Union, Callable
-
-# Expression types
-class Expression:
-    pass
-
-class Variable(Expression):
-    def __init__(self, name: str):
-        self.name = name
-
-    def __repr__(self):
-        return f"Variable({self.name})"
-
-class Constant(Expression):
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return f"Constant({self.value})"
-
-class BinaryOperation(Expression):
-    def __init__(self, op: str, left: Expression, right: Expression):
-        self.op = op
-        self.left = left
-        self.right = right
-
-    def __repr__(self):
-        return f"BinaryOperation({self.op}, {self.left}, {self.right})"
-
-# Statement types
-class Statement:
-    pass
-
-class CompoundStatement(Statement):
-    def __init__(self, statements: List[Statement]):
-        self.statements = statements
-
-    def __repr__(self):
-        return f"CompoundStatement({self.statements})"
-
-class Assignment(Statement):
-    def __init__(self, variable: Variable, expression: Expression):
-        self.variable = variable
-        self.expression = expression
-
-    def __repr__(self):
-        return f"Assignment({self.variable}, {self.expression})"
-
-class WhileLoop(Statement):
-    def __init__(self, condition: Expression, body: CompoundStatement):
-        self.condition = condition
-        self.body = body
-
-    def __repr__(self):
-        return f"WhileLoop({self.condition}, {self.body})"
-
-class IfThenElse(Statement):
-    def __init__(self, condition: Expression, true_branch: CompoundStatement, false_branch: CompoundStatement):
-        self.condition = condition
-        self.true_branch = true_branch
-        self.false_branch = false_branch
-
-    def __repr__(self):
-        return f"IfThenElse({self.condition}, {self.true_branch}, {self.false_branch})"
-
-
-# Example usage:
-# Represents the following WHILE program:
-# x := 1;
-# WHILE x < 10 DO
-#   x := x + 1
-# END
-
-# Program to increment 'x' until it is less than 10
-increment_loop = CompoundStatement([
-    Assignment(Variable('x'), Constant(0)),  # x := 0;
-    WhileLoop(
-        BinaryOperation('<', Variable('x'), Constant(10)),  # WHILE x < 10 DO
-        [
-            Assignment(Variable('x'), BinaryOperation('+', Variable('x'), Constant(1)))  # x := x + 1
-        ]
-    )
-])
-
-
-# Program to set 'y' to 1 if 'x' is less than 5, otherwise set 'y' to 0
-conditional_assignment = CompoundStatement([
-    IfThenElse(
-        BinaryOperation('<', Variable('x'), Constant(5)),  # IF x < 5 THEN
-        [Assignment(Variable('y'), Constant(1))],  # y := 1
-        [Assignment(Variable('y'), Constant(0))]  # ELSE y := 0
-    )
-])
-
-
-# Program to increment 'x' and 'y' in nested loops
-nested_loops = CompoundStatement([
-    Assignment(Variable('x'), Constant(0)),  # x := 0;
-    WhileLoop(
-        BinaryOperation('<', Variable('x'), Constant(3)),  # WHILE x < 3 DO
-        [
-            Assignment(Variable('y'), Constant(0)),  # y := 0;
-            WhileLoop(
-                BinaryOperation('<', Variable('y'), Constant(2)),  # WHILE y < 2 DO
-                [
-                    Assignment(Variable('y'), BinaryOperation('+', Variable('y'), Constant(1)))  # y := y + 1
-                ]
-            ),
-            Assignment(Variable('x'), BinaryOperation('+', Variable('x'), Constant(1)))  # x := x + 1
-        ]
-    )
-])
-
-
-# Program that decrements 'x' and if 'x' is odd, increments 'y'
-while_with_conditional = CompoundStatement([
-    Assignment(Variable('x'), Constant(10)),  # x := 10;
-    Assignment(Variable('y'), Constant(0)),  # y := 0;
-    WhileLoop(
-        BinaryOperation('>', Variable('x'), Constant(0)),  # WHILE x > 0 DO
-        [
-            Assignment(Variable('x'), BinaryOperation('-', Variable('x'), Constant(1))),  # x := x - 1
-            IfThenElse(
-                BinaryOperation('%', Variable('x'), Constant(2)),  # IF x % 2 THEN
-                [Assignment(Variable('y'), BinaryOperation('+', Variable('y'), Constant(1)))],  # y := y + 1
-                []
-            )
-        ]
-    )
-])
-
-
-import unittest
-
-class TestDynamicProgramStructure(unittest.TestCase):
-
-    def check_expression(self, expr):
-        if isinstance(expr, Variable):
-            self.assertIsInstance(expr.name, str)
-        elif isinstance(expr, Constant):
-            self.assertIsInstance(expr.value, int)
-        elif isinstance(expr, BinaryOperation):
-            self.assertIsInstance(expr.op, str)
-            self.check_expression(expr.left)
-            self.check_expression(expr.right)
-        else:
-            self.fail(f"Unknown Expression type: {type(expr)}")
-
-    def check_statement(self, stmt):
-        if isinstance(stmt, Assignment):
-            self.assertIsInstance(stmt.variable, Variable)
-            self.check_expression(stmt.variable)
-            self.check_expression(stmt.expression)
-        elif isinstance(stmt, WhileLoop):
-            self.check_expression(stmt.condition)
-            for s in stmt.body:
-                self.check_statement(s)
-        elif isinstance(stmt, IfThenElse):
-            self.check_expression(stmt.condition)
-            for s in stmt.true_branch:
-                self.check_statement(s)
-            for s in stmt.false_branch:
-                self.check_statement(s)
-        elif isinstance(stmt, CompoundStatement):
-            for s in stmt.statements:
-                self.check_statement(s)
-        else:
-            self.fail(f"Unknown Statement type: {type(stmt)}")
-
-    def test_arbitrary_program_structure(self):
-        programs = [increment_loop, conditional_assignment, nested_loops, while_with_conditional]
-        for prog in programs:
-            self.assertIsInstance(prog, CompoundStatement)
-            for stmt in prog.statements:
-                self.check_statement(stmt)
-
+from syntax import *
 
 class Node:
     def __init__(self):
@@ -443,10 +269,10 @@ class ReachingDefinitions(DataFlowAnalysis):
 class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
-        self.FV = list((Assignment, int)) #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
+        self.FV: list[(Assignment, int)] = [] #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.label = 0
-        self.cfg = list((int, int))
-        self.nodes = list(Node)
+        self.cfg: list[(int, int)] = []
+        self.nodes: list[Node] = []
         self.previous_node_label = 0
         self.is_while_loop = False
         self.is_first_node_in_while = False
@@ -461,7 +287,7 @@ class AvailableExpressionsAnalysis:
 
     # Create the CFG as well as the nodes containing necessary information for doing an analysis (can later move to superclass)
     def create_cfg(self, program: Statement) -> list((int, int)):
-        self.assertIsInstance(program, CompoundStatement)
+        assert isinstance(program, CompoundStatement)
         for stmt in program.statements:
             self.create_cfg_statement(stmt)
         return self.cfg
@@ -469,11 +295,10 @@ class AvailableExpressionsAnalysis:
     # Dealing with expressions
     def create_cfg_expression(self, expr):
         self.label = self.label + 1
-        self.cfg.append((self.previous_node_label, node.label))
         if isinstance(expr, Variable):
-            self.assertIsInstance(expr.name, str)
+            assert isinstance(expr.name, str)
         elif isinstance(expr, Constant):
-            self.assertIsInstance(expr.value, int)
+            assert isinstance(expr.value, int)
         elif isinstance(expr, BinaryOperation):
             node = Node()
             node.label = self.label
@@ -482,6 +307,8 @@ class AvailableExpressionsAnalysis:
             if (self.is_first_node_in_while):
                 self.first_node_in_while.append(node)
                 self.is_first_node_in_while = False
+            self.cfg.append((self.previous_node_label, node.label))
+
         #self.previous_node_label = node.label
 
     # Dealing with statements (using function above as helper function for expressions)
@@ -576,43 +403,7 @@ class AvailableExpressionsAnalysis:
         
 
 
-class TestAvailableExpressionsAnalysis(unittest.TestCase):
-    def __init__(self) -> None:
-        self.cfg = None
-        self.previous_node = None
-        self.nodes = None
 
-    def setUp(self):
-        # Code here will run before each test method
-        analysis = AvailableExpressionsAnalysis()
-        self.cfg = analysis.create_cfg(increment_loop)
-        self.nodes = analysis.nodes
-
-    def test_create_cfg(self):
-        self.previous_node = self.cfg[0]
-        for node in self.cfg:
-            # Check if the node is a tuple
-            isinstance(node, tuple)
-            print(node)
-            # Check if successor node has a higher label 
-            self.assertLessEqual(self.previous_node, node)
-            self.previous_node = node
-
-    def test_nodes(self):
-        self.assertEqual(len(self.cfg), len(self.nodes))
-        for node in self.nodes:
-            print("Node with label {node.label} has the following information: \n")
-            print("Statement: {node.stmt}\n")
-            print("Expression: {node.expression}\n")
-            print("Predecessors: {node.predecessors}\n")
-            print("Successors: {node.successors}\n")
-            print("Generated expressions: {node.gen}\n")
-            print("Killed expressions: {node.kill}\n")
-
-
-    def test_analysis(self):
-        pass
-    
 
 
 
@@ -644,5 +435,4 @@ def main():
     '''
 
 if __name__ == "__main__":
-    unittest.main()
     main()
