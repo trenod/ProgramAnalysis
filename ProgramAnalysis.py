@@ -610,7 +610,7 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             print("Killed expressions: {node.kill}\n")
 
 
-    def analysis(self):
+    def test_analysis(self):
         pass
     
 
