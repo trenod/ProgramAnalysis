@@ -17,14 +17,15 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         for node in self.cfg:
             # Check if the node is a tuple
             isinstance(node, tuple)
-            print(node)
+            print("{node}, ")
             # Check if successors have a higher label than predecessors
             # i.e (1, 2) < (2, 3)
             (fst, snd) = node
+            (fstprev, sndprev) = self.previous_node
             self.assertLessEqual(fstprev, fst)
             self.assertLessEqual(sndprev, snd)
             self.previous_node = node
-            (fstprev, sndprev) = self.previous_node
+            
 
     def test_nodes(self):
         self.assertEqual(len(self.cfg), len(self.nodes))
