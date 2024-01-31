@@ -18,9 +18,13 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             # Check if the node is a tuple
             isinstance(node, tuple)
             print(node)
-            # Check if successor node has a higher label
-            self.assertLessEqual(self.previous_node, node)
+            # Check if successors have a higher label than predecessors
+            # i.e (1, 2) < (2, 3)
+            (fst, snd) = node
+            self.assertLessEqual(fstprev, fst)
+            self.assertLessEqual(sndprev, snd)
             self.previous_node = node
+            (fstprev, sndprev) = self.previous_node
 
     def test_nodes(self):
         self.assertEqual(len(self.cfg), len(self.nodes))

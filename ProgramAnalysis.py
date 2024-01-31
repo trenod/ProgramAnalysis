@@ -13,10 +13,10 @@ class Node:
         self.while_loop_number = None # Number of the while loop this node belongs to
         self.first_node_in_while = False # True if this node is the first node in a while loop
         self.last_node_in_while = False # True if this node is the last node in a while loop
-        self.predecessors = list() # Predecessor nodes in the control flow graph
-        self.successors = list() # Successor nodes in the control flow graph
-        self.coming_in = list() # List of nodes coming in from in the control flow graph
-        self.going_out = list() # List of nodes going out to in the control flow graph
+        self.predecessors: list(Node) = [] # Predecessor nodes in the control flow graph
+        self.successors: list(Node) = [] # Successor nodes in the control flow graph
+        self.coming_in: list(Node) = [] # List of nodes coming in from in the control flow graph
+        self.going_out: list(Node) = [] # List of nodes going out to in the control flow graph
         self.entry_state = set()  # Analysis state at entry to this node (used for chaotic iteration)
         self.exit_state = set()  # Analysis state at exit from this node (used for chaotic iteration)
 
@@ -277,10 +277,10 @@ class AvailableExpressionsAnalysis:
         self.is_while_loop = False
         self.is_first_node_in_while = False
         self.is_last_node_in_while = False
-        self.first_node_in_while = []
+        self.first_node_in_while: list[Node] = []
         self.first_node = None
         self.was_last_node_in_while = False
-        self.last_node_in_while = []
+        self.last_node_in_while: list[Node] = []
         self.last_node = None
         self.current_node = None
         self.previous_node = None
@@ -359,14 +359,14 @@ class AvailableExpressionsAnalysis:
             self.last_node_in_while.append(node)
             #self.is_last_node_in_while = False
         if (self.was_last_node_in_while):
-            was_first_node_in_while = self.first_node_in_while.pop()
-            was_last_node_in_while = self.last_node_in_while.pop()
-            self.cfg.append((was_first_node_in_while.label, node.label))
-            node.coming_in.append(was_first_node_in_while)
-            self.is_first_node_in_while.going_out.append(node)
-            self.cfg.append((was_last_node_in_while.label, node.label))
-            node.coming_in.append(was_last_node_in_while)
-            self.is_last_node_in_while.going_out.append(node)
+            self.first_in_while = self.first_node_in_while.pop()
+            self.last_in_while = self.last_node_in_while.pop()
+            self.cfg.append((self.first_in_while.label, node.label))
+            node.coming_in.append(self.first_in_while)
+            self.first_in_while.going_out.append(node)
+            self.cfg.append((self.last_in_while.label, node.label))
+            node.coming_in.append(self.last_in_while)
+            self.last_in_while.going_out.append(node)
             self.was_last_node_in_while = False
 
         # Logic for dealing with other nodes:
