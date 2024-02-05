@@ -26,14 +26,24 @@ class Node:
             yield current
             current = current.next
 
+    def add_predecessor(self, pred_node):
+        """Add a predecessor node and automatically update the coming_in list."""
+        if pred_node not in self.coming_in:
+            self.coming_in.append(pred_node)
+            pred_node.going_out.append(self)
+            self.coming_in.append(pred_node)
+
+    def add_successor(self, succ_node):
+        """Add a successor node and automatically update the going_out list."""
+        if succ_node not in self.going_out:
+            self.going_out.append(succ_node)
+            succ_node.coming_in.append(self)
+            self.going_out.append(succ_node)
+
+
     def __repr__(self):
         return f"Node(use={self.use}, entry={self.entry}, exit={self.exit})"
     
-    def add_successor(self, node):
-        self.successors.append(node)
-        node.predecessors.append(self)
-
-
 
 
 
@@ -91,9 +101,11 @@ class AvailableExpressionsAnalysis:
             node.stmt = stmt
             self.current_node = node
             #this can be moved to the analysis function:
+            '''
             if stmt not in self.FV:
                 self.FV.append((stmt, node.label))
                 node.gen = stmt
+            '''
             self.nodes.append(node)
 
             if (self.is_last_node_in_while):
@@ -130,22 +142,26 @@ class AvailableExpressionsAnalysis:
             self.last_node_in_while.append(node)
             #self.is_last_node_in_while = False
         if (self.was_last_node_in_while):
+            # Pop from stack to support nested while loops
             self.first_in_while = self.first_node_in_while.pop()
             self.last_in_while = self.last_node_in_while.pop()
+            # CGF of the while loop
             self.cfg.append((self.first_in_while.label, node.label))
-            node.coming_in.append(self.first_in_while)
-            self.first_in_while.going_out.append(node)
+            node.add_predecessor(self.first_in_while)
+            #self.first_in_while.going_out.append(node)
             self.cfg.append((self.last_in_while.label, node.label))
-            node.coming_in.append(self.last_in_while)
-            self.last_in_while.going_out.append(node)
+            node.add_predecessor(self.last_in_while)
+            #self.last_in_while.going_out.append(node)
             self.was_last_node_in_while = False
 
         # Logic for dealing with other nodes:
-        self.cfg.append((self.previous_node_label, node.label))
-        node.coming_in.append(self.previous_node)
-        self.previous_node.going_out.append(node)
+        else: 
+            self.cfg.append((self.previous_node_label, node.label))
+            node.add_predecessor(self.previous_node)
+            #self.previous_node.going_out.append(node)
+        # In any case, the current node becomes the previous node for the next iteration
         self.previous_node = node
-        #self.previous_node_label = node.label
+        self.previous_node_label = node.label
 
     #this function is not needed currently
     def create_cfg_while(self, stmt):
