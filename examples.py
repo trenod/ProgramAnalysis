@@ -7,6 +7,20 @@ from syntax import *
 #   x := x + 1
 # END
 
+# Example from the book, for testing for same results in the book
+book_example = CompoundStatement([
+    Assignment(Variable('x'), BinaryOperation('+', Variable('a'), Variable('b'))),  # x := a + b;
+    Assignment(Variable('y'), BinaryOperation('*', Variable('a'), Variable('b'))),  # y := a * b;
+    WhileLoop(
+        BinaryOperation('>', Variable('y'), BinaryOperation('+', Variable('a'), Variable('b'))),  # WHILE y > a + b DO
+        CompoundStatement([
+            Assignment(Variable('a'), BinaryOperation('+', Variable('a'), Constant(1))),  # a := a + 1;
+            Assignment(Variable('x'), BinaryOperation('+', Variable('a'), Variable('b')))   # x := a + b
+        ])
+    )
+])
+
+
 # Program to increment 'x' until it is less than 10
 increment_loop = CompoundStatement([
     Assignment(Variable('x'), Constant(0)),  # x := 0;

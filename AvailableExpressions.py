@@ -81,16 +81,19 @@ class AvailableExpressionsAnalysis:
         elif isinstance(expr, Constant):
             assert isinstance(expr.value, int)
         elif isinstance(expr, BinaryOperation):
+            # Create a node for the expression
             node = Node()
             node.label = self.label
             node.expression = expr
             self.nodes.append(node)
             if (self.is_first_node_in_while):
+                # Add the first node in the while loop to the stack
                 self.first_node_in_while.append(node)
                 self.is_first_node_in_while = False
+            # Add to control flow graph
             self.cfg.append((self.previous_node_label, node.label))
 
-        #self.previous_node_label = node.label
+        self.previous_node_label = node.label
 
     # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt):
@@ -100,18 +103,12 @@ class AvailableExpressionsAnalysis:
             node.label = self.label
             node.stmt = stmt
             self.current_node = node
-            #this can be moved to the analysis function:
-            '''
-            if stmt not in self.FV:
-                self.FV.append((stmt, node.label))
-                node.gen = stmt
-            '''
             self.nodes.append(node)
 
             if (self.is_last_node_in_while):
                 self.last_node_in_while.append(node)
                 self.is_last_node_in_while = True
-            #self.assertIsInstance(stmt.variable, Variable)
+
             self.create_cfg_expression(stmt.variable)
             self.create_cfg_expression(stmt.expression)
         elif isinstance(stmt, WhileLoop):
@@ -138,9 +135,10 @@ class AvailableExpressionsAnalysis:
         # Logic for dealing with While loops:
         if (self.is_first_node_in_while):
             self.first_node_in_while.append(node)
+            self.is_first_node_in_while = False
         if (self.is_last_node_in_while):
             self.last_node_in_while.append(node)
-            #self.is_last_node_in_while = False
+            self.is_last_node_in_while = False
         if (self.was_last_node_in_while):
             # Pop from stack to support nested while loops
             self.first_in_while = self.first_node_in_while.pop()
