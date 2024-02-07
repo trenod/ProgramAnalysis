@@ -1,5 +1,6 @@
 from typing import List, Union, Callable
 from syntax import *
+from examples import *
 
 class Node:
     def __init__(self):
@@ -133,6 +134,7 @@ class AvailableExpressionsAnalysis:
                 self.create_cfg_statement(s)
 
         # Logic for dealing with While loops:
+                
         if (self.is_first_node_in_while):
             self.first_node_in_while.append(node)
             self.is_first_node_in_while = False
@@ -145,10 +147,13 @@ class AvailableExpressionsAnalysis:
             self.last_in_while = self.last_node_in_while.pop()
             # CGF of the while loop
             self.cfg.append((self.first_in_while.label, node.label))
+            # add_predecessor updates the coming in and going out lists
             node.add_predecessor(self.first_in_while)
+            #line below is not needed?
             #self.first_in_while.going_out.append(node)
             self.cfg.append((self.last_in_while.label, node.label))
             node.add_predecessor(self.last_in_while)
+            #line below is not needed?
             #self.last_in_while.going_out.append(node)
             self.was_last_node_in_while = False
 
@@ -156,6 +161,7 @@ class AvailableExpressionsAnalysis:
         else: 
             self.cfg.append((self.previous_node_label, node.label))
             node.add_predecessor(self.previous_node)
+            #line below is not needed?
             #self.previous_node.going_out.append(node)
         # In any case, the current node becomes the previous node for the next iteration
         self.previous_node = node
@@ -170,7 +176,7 @@ class AvailableExpressionsAnalysis:
                 self.create_cfg_expression(stmt.body[i])
                 self.create_cfg_statement(stmt.body[i])
                 
-    def analyze(self, nodes: list, cfg: list): #nodes: list of nodes, cfg: control flow graph
+    def analyze(self, nodes: list): #nodes: list of nodes, cfg: control flow graph
         for node in nodes:
             if node.expression is not None:
                 if node.expression in self.FV:
@@ -183,6 +189,13 @@ class AvailableExpressionsAnalysis:
                 else:
                     node.kill = node.stmt
                 
+    def print_nodes(self, nodes : list, cfg : list):
+        print("Control Flow Graph: ")
+        print(cfg)
+
+        for node in nodes:
+            print(f"Node {node.label}: gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}")
+        
                 
         
         
@@ -193,31 +206,18 @@ class AvailableExpressionsAnalysis:
 
 
 def main():
-    # Uncomment below to test programs
-    #unittest.main() 
-
     #Available expressions analysis:
+    analysis = AvailableExpressionsAnalysis()
 
-
-
-    '''
-    Reaching definitions analysis:
-
-    # Create the initial state
-    initial_state = set()
-    # Create the analysis object
-    analysis = ReachingDefinitions(initial_state)
-    # Create the nodes from the program
-    nodes = analysis.create_nodes(increment_loop)
-    # Create the control flow graph
-    analysis.create_cfg()
-    # Perform the analysis
+    # Create the CFG, with nodes containing necessary information for doing an analysis
+    cfg = analysis.create_cfg(book_example)
+    
+    # Analyze the program
+    nodes = analysis.nodes
     analysis.analyze(nodes)
-    # Copy the nodes to print
-    nodes_to_print = nodes.copy()
-    # Print out the results
-    analysis.print_nodes(None, nodes_to_print)
-    '''
+
+    # Print the results
+    analysis.print_nodes(nodes, cfg)
 
 if __name__ == "__main__":
     main()
