@@ -14,8 +14,8 @@ class Node:
         self.while_loop_number = None # Number of the while loop this node belongs to
         self.first_node_in_while = False # True if this node is the first node in a while loop
         self.last_node_in_while = False # True if this node is the last node in a while loop
-        self.predecessors: list(Node) = [] # Predecessor nodes in the control flow graph
-        self.successors: list(Node) = [] # Successor nodes in the control flow graph
+        #self.predecessors: list(Node) = [] # Predecessor nodes in the control flow graph
+        #self.successors: list(Node) = [] # Successor nodes in the control flow graph
         self.coming_in: list(Node) = [] # List of nodes coming in from in the control flow graph
         self.going_out: list(Node) = [] # List of nodes going out to in the control flow graph
         self.entry_state = set()  # Analysis state at entry to this node (used for chaotic iteration)
@@ -34,6 +34,7 @@ class Node:
             pred_node.going_out.append(self)
             self.coming_in.append(pred_node)
 
+    # this function not needed? (logic already in above function)
     def add_successor(self, succ_node):
         """Add a successor node and automatically update the going_out list."""
         if succ_node not in self.going_out:
@@ -93,8 +94,7 @@ class AvailableExpressionsAnalysis:
                 self.is_first_node_in_while = False
             # Add to control flow graph
             self.cfg.append((self.previous_node_label, node.label))
-
-        self.previous_node_label = node.label
+            self.previous_node_label = node.label
 
     # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt):
@@ -148,21 +148,25 @@ class AvailableExpressionsAnalysis:
             # CGF of the while loop
             self.cfg.append((self.first_in_while.label, node.label))
             # add_predecessor updates the coming in and going out lists
-            node.add_predecessor(self.first_in_while)
+            #node.add_predecessor(self.first_in_while)
+            self.first_in_while.add_successor(node)
             #line below is not needed?
             #self.first_in_while.going_out.append(node)
             self.cfg.append((self.last_in_while.label, node.label))
-            node.add_predecessor(self.last_in_while)
+            #node.add_predecessor(self.last_in_while)
+            self.last_in_while.add_successor(node)
             #line below is not needed?
             #self.last_in_while.going_out.append(node)
             self.was_last_node_in_while = False
 
         # Logic for dealing with other nodes:
         else: 
-            self.cfg.append((self.previous_node_label, node.label))
-            node.add_predecessor(self.previous_node)
-            #line below is not needed?
-            #self.previous_node.going_out.append(node)
+            if (self.previous_node is not None):
+                self.cfg.append((self.previous_node_label, node.label))
+                #node.add_predecessor(self.previous_node)
+                self.previous_node.add_successor(node)
+                #line below is not needed?
+                #self.previous_node.going_out.append(node)
         # In any case, the current node becomes the previous node for the next iteration
         self.previous_node = node
         self.previous_node_label = node.label
