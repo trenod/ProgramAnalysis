@@ -64,9 +64,11 @@ class AvailableExpressionsAnalysis:
         self.first_node = None
         self.was_last_node_in_while = False
         self.last_node_in_while: list[Node] = []
+        self.node = None
         self.last_node = None
         self.current_node = None
         self.previous_node = None
+        #self.node_created = False
 
     # Create the CFG as well as the nodes containing necessary information for doing an analysis (can later move to superclass)
     def create_cfg(self, program: Statement) -> list((int, int)):
@@ -84,30 +86,31 @@ class AvailableExpressionsAnalysis:
             assert isinstance(expr.value, int)
         elif isinstance(expr, BinaryOperation):
             # Create a node for the expression
-            node = Node()
-            node.label = self.label
-            node.expression = expr
-            self.nodes.append(node)
+            self.node = Node()
+            self.node.label = self.label
+            self.node.expression = expr
+            self.nodes.append(self.node)
             if (self.is_first_node_in_while):
                 # Add the first node in the while loop to the stack
-                self.first_node_in_while.append(node)
+                self.first_node_in_while.append(self.node)
                 self.is_first_node_in_while = False
             # Add to control flow graph
-            self.cfg.append((self.previous_node_label, node.label))
-            self.previous_node_label = node.label
+            self.cfg.append((self.previous_node_label, self.node.label))
+            self.previous_node_label = self.node.label
 
     # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt):
         self.label = self.label + 1
         if isinstance(stmt, Assignment):
-            node = Node()
-            node.label = self.label
-            node.stmt = stmt
-            self.current_node = node
-            self.nodes.append(node)
+            self.node = Node()
+            self.node.label = self.label
+            self.node.stmt = stmt
+            self.current_node = self.node
+            self.nodes.append(self.node)
+            #self.node_created = True
 
             if (self.is_last_node_in_while):
-                self.last_node_in_while.append(node)
+                self.last_node_in_while.append(self.node)
                 self.is_last_node_in_while = True
 
             self.create_cfg_expression(stmt.variable)
@@ -116,9 +119,9 @@ class AvailableExpressionsAnalysis:
             is_while_loop = True
             self.create_cfg_expression(stmt.condition)
             for s in stmt.body:
-                if (s == stmt.body[0]):
+                if (s == stmt.body.statements[0]):
                     self.is_first_node_in_while = True
-                elif (s == stmt.body[-1]):
+                elif (s == stmt.body.statements[-1]):
                     self.is_last_node_in_while = True
                 self.create_cfg_statement(s)
             is_while_loop = False
@@ -136,40 +139,40 @@ class AvailableExpressionsAnalysis:
         # Logic for dealing with While loops:
                 
         if (self.is_first_node_in_while):
-            self.first_node_in_while.append(node)
+            self.first_node_in_while.append(self.node)
             self.is_first_node_in_while = False
-        if (self.is_last_node_in_while):
-            self.last_node_in_while.append(node)
+        elif (self.is_last_node_in_while):
+            self.last_node_in_while.append(self.node)
             self.is_last_node_in_while = False
-        if (self.was_last_node_in_while):
+        elif (self.was_last_node_in_while):
             # Pop from stack to support nested while loops
             self.first_in_while = self.first_node_in_while.pop()
             self.last_in_while = self.last_node_in_while.pop()
             # CGF of the while loop
-            self.cfg.append((self.first_in_while.label, node.label))
+            self.cfg.append((self.first_in_while.label, self.node.label))
             # add_predecessor updates the coming in and going out lists
             #node.add_predecessor(self.first_in_while)
-            self.first_in_while.add_successor(node)
+            self.first_in_while.add_successor(self.node)
             #line below is not needed?
             #self.first_in_while.going_out.append(node)
-            self.cfg.append((self.last_in_while.label, node.label))
+            self.cfg.append((self.last_in_while.label, self.node.label))
             #node.add_predecessor(self.last_in_while)
-            self.last_in_while.add_successor(node)
+            self.last_in_while.add_successor(self.node)
             #line below is not needed?
             #self.last_in_while.going_out.append(node)
             self.was_last_node_in_while = False
 
         # Logic for dealing with other nodes:
-        else: 
-            if (self.previous_node is not None):
-                self.cfg.append((self.previous_node_label, node.label))
-                #node.add_predecessor(self.previous_node)
-                self.previous_node.add_successor(node)
-                #line below is not needed?
-                #self.previous_node.going_out.append(node)
+            
+        elif (self.previous_node is not None):
+            self.cfg.append((self.previous_node_label, self.node.label))
+            #node.add_predecessor(self.previous_node)
+            self.previous_node.add_successor(self.node)
+            #line below is not needed?
+            #self.previous_node.going_out.append(node)
         # In any case, the current node becomes the previous node for the next iteration
-        self.previous_node = node
-        self.previous_node_label = node.label
+        self.previous_node = self.node
+        self.previous_node_label = self.node.label
 
     #this function is not needed currently
     def create_cfg_while(self, stmt):

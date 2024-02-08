@@ -41,6 +41,17 @@ class CompoundStatement(Statement):
     def __init__(self, statements: List[Statement]):
         self.statements = statements
 
+    '''
+    def __iter__(self):
+        current = self.head
+        while current is not None:
+            yield current
+            current = current.next
+    '''
+    def __iter__(self):
+        return iter(self.statements)
+
+
     def __repr__(self):
         return f"CompoundStatement({self.statements})"
 
