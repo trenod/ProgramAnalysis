@@ -60,8 +60,8 @@ class AvailableExpressionsAnalysis:
         self.cfg: list[(int, int)] = []
         self.nodes: list[Node] = []
         self.previous_node_label = 0
-        self.is_then_else = False
-        self.is_while_loop = False
+        self.if_then_else = False
+        self.while_loop = False
         self.is_first_node_in_while = False
         self.is_last_node_in_while = False
         self.first_node_in_while: list[Node] = []
@@ -89,26 +89,23 @@ class AvailableExpressionsAnalysis:
         elif isinstance(expr, Constant):
             assert isinstance(expr.value, int)
         elif isinstance(expr, BinaryOperation):
-            if (self.is_first_node_in_while):
-                # Add the first node in the while loop to the stack
-                self.first_node_in_while.append(self.node)
-                self.is_first_node_in_while = True
-                self.expr_node = True
-            elif (self.if_then_else):
-                self.expr_node = True
-
-            if (self.expr_node):
-                # Create a node for the expression
+            # Create a node for the expression
+            if (self.is_first_node_in_while or self.if_then_else):
                 self.node = Node()
                 self.label = self.label + 1
                 self.node.label = self.label
                 self.node.expression = expr
                 self.nodes.append(self.node)
                 print("Binary operation Node created: ", self.node.label, "\n")
+                # Add to control flow graph
+                self.cfg.append((self.previous_node_label, self.node.label))
 
-            # Add to control flow graph
-            self.cfg.append((self.previous_node_label, self.node.label))
+                if (self.is_first_node_in_while):
+                    # Add the first node in the while loop to the stack
+                    self.first_node_in_while.append(self.node)
+                    #self.is_first_node_in_while = True
             self.previous_node_label = self.node.label
+            self.previous_node = self.node
 
     # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt):
@@ -129,7 +126,7 @@ class AvailableExpressionsAnalysis:
             self.create_cfg_expression(stmt.variable)
             self.create_cfg_expression(stmt.expression)
         elif isinstance(stmt, WhileLoop):
-            is_while_loop = True
+            self.while_loop = True
             self.create_cfg_expression(stmt.condition)
             for s in stmt.body:
                 if (s == stmt.body.statements[0]):
@@ -137,15 +134,17 @@ class AvailableExpressionsAnalysis:
                 if (s == stmt.body.statements[-1]):
                     self.is_last_node_in_while = True
                 self.create_cfg_statement(s)
-            is_while_loop = False
+            while_loop = False
             was_last_node_in_while = True
         elif isinstance(stmt, IfThenElse):
             self.if_then_else = True
             self.create_cfg_expression(stmt.condition)
+            self.if_then_else = False
             for s in stmt.true_branch:
                 self.create_cfg_statement(s)
             for s in stmt.false_branch:
                 self.create_cfg_statement(s)
+            
         elif isinstance(stmt, CompoundStatement):
             for s in stmt.statements:
                 self.create_cfg_statement(s)
@@ -185,8 +184,9 @@ class AvailableExpressionsAnalysis:
             #line below is not needed?
             #self.previous_node.going_out.append(node)
         # In any case, the current node becomes the previous node for the next iteration
-        self.previous_node = self.node
         self.previous_node_label = self.node.label
+        self.previous_node = self.node
+        
 
     #this function is not needed currently
     def create_cfg_while(self, stmt):
