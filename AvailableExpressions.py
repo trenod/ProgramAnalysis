@@ -42,10 +42,13 @@ class Node:
             succ_node.coming_in.append(self)
             self.going_out.append(succ_node)
 
-
     def __repr__(self):
-        return f"Node(use={self.use}, entry={self.entry}, exit={self.exit})"
-    
+        return f"Node(label={self.label})"
+
+    '''
+    def __repr__(self):
+        return f"Node(entry={self.entry}, exit={self.exit})"
+    '''
 
 
 
@@ -201,7 +204,7 @@ class AvailableExpressionsAnalysis:
         print(cfg)
 
         for node in nodes:
-            print(f"Node {node.label}: gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}")
+            print(f"Node {node.label}: Predecessors={node.coming_in} Successors={node.going_out} gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}")
         
                 
         
