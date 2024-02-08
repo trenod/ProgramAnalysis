@@ -31,8 +31,9 @@ class Node:
         """Add a predecessor node and automatically update the coming_in list."""
         if pred_node not in self.coming_in:
             self.coming_in.append(pred_node)
+        if self not in pred_node.going_out:
             pred_node.going_out.append(self)
-            self.coming_in.append(pred_node)
+            
 
     # this function not needed? (logic already in above function)
     def add_successor(self, succ_node):
@@ -98,14 +99,14 @@ class AvailableExpressionsAnalysis:
                 self.nodes.append(self.node)
                 print("Binary operation Node created: ", self.node.label, "\n")
                 # Add to control flow graph
-                self.cfg.append((self.previous_node_label, self.node.label))
+                self.cfg.append((self.previous_node.label, self.node.label))
 
                 if (self.is_first_node_in_while):
                     # Add the first node in the while loop to the stack
                     self.first_node_in_while.append(self.node)
                     #self.is_first_node_in_while = True
-            self.previous_node_label = self.node.label
-            self.previous_node = self.node
+                #self.previous_node_label = self.node.label
+                self.previous_node = self.node
 
     # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt):
@@ -114,7 +115,7 @@ class AvailableExpressionsAnalysis:
             self.label = self.label + 1
             self.node.label = self.label
             self.node.stmt = stmt
-            self.current_node = self.node
+            #self.current_node = self.node
             self.nodes.append(self.node)
             print("Stmt Node created: ", self.node.label, "\n")
             #self.node_created = True
@@ -164,27 +165,22 @@ class AvailableExpressionsAnalysis:
             # CGF of the while loop
             self.cfg.append((self.first_in_while.label, self.node.label))
             # add_predecessor updates the coming in and going out lists
-            #node.add_predecessor(self.first_in_while)
             self.first_in_while.add_successor(self.node)
-            #line below is not needed?
             #self.first_in_while.going_out.append(node)
             self.cfg.append((self.last_in_while.label, self.node.label))
             #node.add_predecessor(self.last_in_while)
             self.last_in_while.add_successor(self.node)
-            #line below is not needed?
-            #self.last_in_while.going_out.append(node)
             self.was_last_node_in_while = False
 
         # Logic for dealing with other nodes:
             
         elif (self.previous_node is not None):
-            self.cfg.append((self.previous_node_label, self.node.label))
+            self.cfg.append((self.previous_node.label, self.node.label))
             #node.add_predecessor(self.previous_node)
             self.previous_node.add_successor(self.node)
-            #line below is not needed?
             #self.previous_node.going_out.append(node)
         # In any case, the current node becomes the previous node for the next iteration
-        self.previous_node_label = self.node.label
+        #self.previous_node_label = self.node.label
         self.previous_node = self.node
         
 
