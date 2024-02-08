@@ -82,3 +82,8 @@ class IfThenElse(Statement):
 
     def __repr__(self):
         return f"IfThenElse({self.condition}, {self.true_branch}, {self.false_branch})"
+
+
+class Skip(Statement):
+    def __repr__(self):
+        return "Skip"
