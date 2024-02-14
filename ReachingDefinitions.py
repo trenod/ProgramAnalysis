@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Set
 from typing import List, Union, Callable
 from syntax import *
-from AvailableExpressions import Node
+from node import *
 
 class DataFlowAnalysis(ABC):
     def __init__(self, initial_state):
