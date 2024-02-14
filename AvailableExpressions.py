@@ -1,6 +1,9 @@
-from typing import List, Union, Callable
+import logging
+from collections import abc
+from typing import List, Union, Callable, Set
 from syntax import *
 from examples import *
+
 
 class Node:
     def __init__(self):
@@ -50,7 +53,6 @@ class Node:
     def __repr__(self):
         return f"Node(entry={self.entry}, exit={self.exit})"
     '''
-
 
 
 class AvailableExpressionsAnalysis:
@@ -109,80 +111,47 @@ class AvailableExpressionsAnalysis:
                 self.previous_node = self.node
 
     # Dealing with statements (using function above as helper function for expressions)
-    def create_cfg_statement(self, stmt):
+    def create_cfg_statement(self, stmt) -> (Node, List[Node]):
+        self.label = self.label + 1
+        node = Node()
+        node.label = self.label  # str(self.label)+str(stmt.__class__)
+        node.going_out = []
+        # self.nodes.append(self.node)
         if isinstance(stmt, Assignment):
-            self.node = Node()
-            self.label = self.label + 1
-            self.node.label = self.label
-            self.node.stmt = stmt
-            #self.current_node = self.node
-            self.nodes.append(self.node)
-            print("Stmt Node created: ", self.node.label, "\n")
-            #self.node_created = True
-
-            if (self.is_last_node_in_while):
-                self.last_node_in_while.append(self.node)
-                self.is_last_node_in_while = True
-
-            self.create_cfg_expression(stmt.variable)
-            self.create_cfg_expression(stmt.expression)
+            node.stmt = stmt
+            logging.debug("Stmt Node created: ", node.label, "\n")
+            return node, [node]
         elif isinstance(stmt, WhileLoop):
-            self.while_loop = True
-            self.create_cfg_expression(stmt.condition)
-            for s in stmt.body:
-                if (s == stmt.body.statements[0]):
-                    self.is_first_node_in_while = True
-                if (s == stmt.body.statements[-1]):
-                    self.is_last_node_in_while = True
-                self.create_cfg_statement(s)
-            while_loop = False
-            was_last_node_in_while = True
+            # diamond with two exits
+            # TODO: self.create_cfg_expression(stmt.condition)
+            (root, exits) = self.create_cfg_statement(stmt.body)
+            node.going_out = [root]
+            for i in exits:
+                # Careful, don't overwrite, append!
+                i.going_out.append(node)
+            return node, [node]
         elif isinstance(stmt, IfThenElse):
-            self.if_then_else = True
             self.create_cfg_expression(stmt.condition)
-            self.if_then_else = False
-            for s in stmt.true_branch:
-                self.create_cfg_statement(s)
-            for s in stmt.false_branch:
-                self.create_cfg_statement(s)
-            
+            (branch_t, exits_t) = self.create_cfg_statement(stmt.true_branch)
+            (branch_f, exits_f) = self.create_cfg_statement(stmt.false_branch)
+            node.going_out = [branch_f, branch_t]
+            return node, node.going_out
         elif isinstance(stmt, CompoundStatement):
+            # Doesn't actually use the first few self.*-lines above!
+            first = None
+            prevs = None
             for s in stmt.statements:
-                self.create_cfg_statement(s)
-
-        # Logic for dealing with While loops:
-                
-        if (self.is_first_node_in_while):
-            self.first_node_in_while.append(self.node)
-            self.is_first_node_in_while = False
-        elif (self.is_last_node_in_while):
-            self.last_node_in_while.append(self.node)
-            self.is_last_node_in_while = False
-        elif (self.was_last_node_in_while):
-            # Pop from stack to support nested while loops
-            self.first_in_while = self.first_node_in_while.pop()
-            self.last_in_while = self.last_node_in_while.pop()
-            # CGF of the while loop
-            self.cfg.append((self.first_in_while.label, self.node.label))
-            # add_predecessor updates the coming in and going out lists
-            self.first_in_while.add_successor(self.node)
-            #self.first_in_while.going_out.append(node)
-            self.cfg.append((self.last_in_while.label, self.node.label))
-            #node.add_predecessor(self.last_in_while)
-            self.last_in_while.add_successor(self.node)
-            self.was_last_node_in_while = False
-
-        # Logic for dealing with other nodes:
-            
-        elif (self.previous_node is not None):
-            self.cfg.append((self.previous_node.label, self.node.label))
-            #node.add_predecessor(self.previous_node)
-            self.previous_node.add_successor(self.node)
-            #self.previous_node.going_out.append(node)
-        # In any case, the current node becomes the previous node for the next iteration
-        #self.previous_node_label = self.node.label
-        self.previous_node = self.node
-        
+                (node, exits) = self.create_cfg_statement(s)
+                if first is None:
+                    first = node
+                if prevs is not None:
+                    for p in prevs:
+                        p.going_out.append(node)
+                prevs = exits
+            assert first is not None, "Empty CompoundStmt :-("
+            return first, exits
+        else:
+            assert False, stmt
 
     #this function is not needed currently
     def create_cfg_while(self, stmt):
@@ -212,14 +181,22 @@ class AvailableExpressionsAnalysis:
 
         for node in nodes:
             print(f"Node {node.label}: Predecessors={node.coming_in} Successors={node.going_out} gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}")
-        
-                
-        
-        
+
+    def print_cfg(self, cfg: list):
+        print("Control Flow Graph: ")
+        print(cfg)
 
 
+def mkDFS(node: Node, seen: Set[Node]): # -> List[(int,int)]:
+    output = []
+    if node in seen:
+        return output
+    seen.add(node)
 
-
+    for i in node.going_out:
+        output.append((node.label, i.label))
+        output = output + mkDFS(i, seen)
+    return output
 
 
 def main():
@@ -227,8 +204,21 @@ def main():
     analysis = AvailableExpressionsAnalysis()
 
     # Create the CFG, with nodes containing necessary information for doing an analysis
-    cfg = analysis.create_cfg(book_example)
-    
+    (root, exits) = analysis.create_cfg_statement(book_example)
+    print(root, exits)
+
+    # Need a final patch-up!
+    the_exit = Node()
+    the_exit.label = "exit"
+    the_exit.going_out = []
+    for e in exits:
+        e.going_out.append(the_exit)
+
+    print(mkDFS(root, set()))
+    # analysis.print_cfg(cfg)
+    # TODO: assert that the result is right.
+    exit(1)
+
     # Analyze the program
     nodes = analysis.nodes
     analysis.analyze(nodes)
