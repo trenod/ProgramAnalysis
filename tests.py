@@ -12,6 +12,19 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         self.cfg = analysis.create_cfg(increment_loop)
         self.nodes = analysis.nodes
 
+        (root, exits) = analysis.create_cfg_statement(book_example)
+    
+        # Need a final patch-up!
+        the_exit = Node()
+        the_exit.label = "exit"
+        the_exit.going_out = []
+        for e in exits:
+            e.going_out.append(the_exit)
+
+        self.cfg_created = (mkDFS(root, set()))
+        # analysis.print_cfg(cfg)
+        # TODO: assert that the result is right.
+
     def test_create_cfg(self):
         self.previous_node = self.cfg[0]
         for node in self.cfg:
@@ -38,8 +51,20 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             print("Generated expressions: {node.gen}\n")
             print("Killed expressions: {node.kill}\n")
 
+    def test_book_example(self):
+        # Test book example for correct cfg and nodes
+        assert self.cfg_created == [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')]
+        # Test that the nodes are correct
+        self.assertEqual(self.nodes[0].label, 1)
+        self.assertEqual(self.nodes[1].label, 2)
+        self.assertEqual(self.nodes[2].label, 3)
+        self.assertEqual(self.nodes[3].label, 4)
+        self.assertEqual(self.nodes[4].label, 5)
+        self.assertEqual(self.nodes[5].label, 'exit')
+
     def test_analysis(self):
         pass
+
 
 
 class TestDynamicProgramStructure(unittest.TestCase):
