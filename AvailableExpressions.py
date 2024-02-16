@@ -31,14 +31,14 @@ class AvailableExpressionsAnalysis:
         #self.node_created = False
 
     # Create the CFG as well as the nodes containing necessary information for doing an analysis (can later move to superclass)
-    def create_cfg(self, program: Statement) -> list((int, int)):
-        assert isinstance(program, CompoundStatement)
-        for stmt in program.statements:
-            self.create_cfg_statement(stmt)
-        return self.cfg
+    #def create_cfg(self, program: Statement) -> list((int, int)):
+    #    assert isinstance(program, CompoundStatement)
+    #    for stmt in program.statements:
+    #        self.create_cfg_statement(stmt)
+    #    return self.cfg
     
     # Dealing with expressions
-    def create_cfg_expression(self, expr, label: int) -> (Node, label: int):
+    def create_cfg_expression(self, expr, label: int) -> (Node, label):
         if isinstance(expr, Variable):
             assert isinstance(expr.name, str)
         elif isinstance(expr, Constant):
@@ -56,10 +56,10 @@ class AvailableExpressionsAnalysis:
             return (node, label)
 
     # Dealing with statements (using function above as helper function for expressions)
-    def create_cfg_statement(self, stmt, label: int) -> (Node, list[Node], label: int):
+    def create_cfg_statement(self, stmt, label: int) -> (Node, list[Node], label):
         label = label + 1
         node = Node()
-        node.label = self.label  # str(self.label)+str(stmt.__class__)
+        node.label = label  # str(self.label)+str(stmt.__class__)
         node.going_out = []
         # self.nodes.append(self.node)
         if isinstance(stmt, Assignment):
@@ -69,7 +69,7 @@ class AvailableExpressionsAnalysis:
         elif isinstance(stmt, WhileLoop):
             # diamond with two exits
             # TODO: self.create_cfg_expression(stmt.condition)
-            condition, label = self.create_cfg_expression(stmt.condition, label)
+            condition_node, label = self.create_cfg_expression(stmt.condition, label)
 
             (root, exits, label) = self.create_cfg_statement(stmt.body, label)
             node.going_out = [root]
@@ -96,7 +96,7 @@ class AvailableExpressionsAnalysis:
                         p.going_out.append(node)
                 prevs = exits
             assert first is not None, "Empty CompoundStmt :-("
-            return first, exits
+            return first, exits, label
         else:
             assert False, stmt
 
@@ -151,7 +151,8 @@ def main():
     analysis = AvailableExpressionsAnalysis()
 
     # Create the CFG, with nodes containing necessary information for doing an analysis
-    (root, exits) = analysis.create_cfg_statement(book_example)
+    (root, exits, nr_of_nodes) = analysis.create_cfg_statement(book_example, 0)
+    print("Number of nodes: ", nr_of_nodes, "\n")
     print(root, exits)
 
     # Need a final patch-up!
