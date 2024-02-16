@@ -11,23 +11,23 @@ class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
         self.FV: list[(Assignment, int)] = [] #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
-        self.label = 0
-        self.cfg: list[(int, int)] = []
+        #self.label = 0
+        #self.cfg: list[(int, int)] = []
         self.nodes: list[Node] = []
-        self.previous_node_label = 0
-        self.if_then_else = False
-        self.while_loop = False
-        self.is_first_node_in_while = False
-        self.is_last_node_in_while = False
-        self.first_node_in_while: list[Node] = []
-        self.first_node = None
-        self.was_last_node_in_while = False
-        self.last_node_in_while: list[Node] = []
-        self.node = None
-        self.last_node = None
-        self.current_node = None
-        self.previous_node = None
-        self.expr_node = False
+        #self.previous_node_label = 0
+        #self.if_then_else = False
+        #self.while_loop = False
+        #self.is_first_node_in_while = False
+        #self.is_last_node_in_while = False
+        #self.first_node_in_while: list[Node] = []
+        #self.first_node = None
+        #self.was_last_node_in_while = False
+        #self.last_node_in_while: list[Node] = []
+        #self.node = None
+        #self.last_node = None
+        #self.current_node = None
+        #self.previous_node = None
+        #self.expr_node = False
         #self.node_created = False
 
     # Create the CFG as well as the nodes containing necessary information for doing an analysis (can later move to superclass)
@@ -38,33 +38,26 @@ class AvailableExpressionsAnalysis:
         return self.cfg
     
     # Dealing with expressions
-    def create_cfg_expression(self, expr):
+    def create_cfg_expression(self, expr, label: int) -> (Node, label: int):
         if isinstance(expr, Variable):
             assert isinstance(expr.name, str)
         elif isinstance(expr, Constant):
             assert isinstance(expr.value, int)
         elif isinstance(expr, BinaryOperation):
             # Create a node for the expression
-            if (self.is_first_node_in_while or self.if_then_else):
-                self.node = Node()
-                self.label = self.label + 1
-                self.node.label = self.label
-                self.node.expression = expr
-                self.nodes.append(self.node)
-                print("Binary operation Node created: ", self.node.label, "\n")
-                # Add to control flow graph
-                self.cfg.append((self.previous_node.label, self.node.label))
-
-                if (self.is_first_node_in_while):
-                    # Add the first node in the while loop to the stack
-                    self.first_node_in_while.append(self.node)
-                    #self.is_first_node_in_while = True
-                #self.previous_node_label = self.node.label
-                self.previous_node = self.node
+            node = Node()
+            label = label + 1
+            node.label = label
+            node.expression = expr
+            self.nodes.append(self.node)
+            logging.debug("Binary operation Node created: ", self.node.label, "\n")
+            # Add to control flow graph
+            self.cfg.append((self.previous_node.label, self.node.label))
+            return (node, label)
 
     # Dealing with statements (using function above as helper function for expressions)
-    def create_cfg_statement(self, stmt) -> (Node, List[Node]):
-        self.label = self.label + 1
+    def create_cfg_statement(self, stmt, label: int) -> (Node, list[Node], label: int):
+        label = label + 1
         node = Node()
         node.label = self.label  # str(self.label)+str(stmt.__class__)
         node.going_out = []
@@ -72,11 +65,13 @@ class AvailableExpressionsAnalysis:
         if isinstance(stmt, Assignment):
             node.stmt = stmt
             logging.debug("Stmt Node created: ", node.label, "\n")
-            return node, [node]
+            return node, [node], label
         elif isinstance(stmt, WhileLoop):
             # diamond with two exits
             # TODO: self.create_cfg_expression(stmt.condition)
-            (root, exits) = self.create_cfg_statement(stmt.body)
+            condition, label = self.create_cfg_expression(stmt.condition, label)
+
+            (root, exits, label) = self.create_cfg_statement(stmt.body, label)
             node.going_out = [root]
             for i in exits:
                 # Careful, don't overwrite, append!
@@ -87,13 +82,13 @@ class AvailableExpressionsAnalysis:
             (branch_t, exits_t) = self.create_cfg_statement(stmt.true_branch)
             (branch_f, exits_f) = self.create_cfg_statement(stmt.false_branch)
             node.going_out = [branch_f, branch_t]
-            return node, node.going_out
+            return node, node.going_out, label
         elif isinstance(stmt, CompoundStatement):
             # Doesn't actually use the first few self.*-lines above!
             first = None
             prevs = None
             for s in stmt.statements:
-                (node, exits) = self.create_cfg_statement(s)
+                (node, exits) = self.create_cfg_statement(s, label)
                 if first is None:
                     first = node
                 if prevs is not None:
