@@ -46,19 +46,21 @@ class AvailableExpressionsAnalysis:
         elif isinstance(expr, BinaryOperation):
             # Create a node for the expression
             node = Node()
+            if (label == None):
+                label = 0
             label = label + 1
             node.label = label
             node.expression = expr
-            self.nodes.append(self.node)
+            self.nodes.append(node)
             logging.debug("Binary operation Node created: ", self.node.label, "\n")
-            # Add to control flow graph
-            self.cfg.append((self.previous_node.label, self.node.label))
             return (node, label)
 
     # Dealing with statements (using function above as helper function for expressions)
     def create_cfg_statement(self, stmt, label: int) -> (Node, list[Node], label):
-        label = label + 1
         node = Node()
+        if (label == None):
+            label = 0
+        label = label + 1
         node.label = label  # str(self.label)+str(stmt.__class__)
         node.going_out = []
         # self.nodes.append(self.node)
@@ -69,14 +71,18 @@ class AvailableExpressionsAnalysis:
         elif isinstance(stmt, WhileLoop):
             # diamond with two exits
             # TODO: self.create_cfg_expression(stmt.condition)
-            condition_node, label = self.create_cfg_expression(stmt.condition, label)
-
+            # Placing condition node first in while loop/nodes, check if it's correct
+            (condition_node, label) = self.create_cfg_expression(stmt.condition, label)
             (root, exits, label) = self.create_cfg_statement(stmt.body, label)
-            node.going_out = [root]
+            node.going_out = [condition_node]
+            exits.append(root)
+
+            #(root, exits, label) = self.create_cfg_statement(stmt.body, label)
+            #node.going_out = [root]
             for i in exits:
                 # Careful, don't overwrite, append!
                 i.going_out.append(node)
-            return node, [node]
+            return node, [node], label
         elif isinstance(stmt, IfThenElse):
             self.create_cfg_expression(stmt.condition)
             (branch_t, exits_t) = self.create_cfg_statement(stmt.true_branch)
