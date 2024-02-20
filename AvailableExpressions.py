@@ -38,7 +38,7 @@ class AvailableExpressionsAnalysis:
     #    return self.cfg
     
     # Dealing with expressions
-    def create_cfg_expression(self, expr, label: int) -> (Node, label):
+    def create_cfg_expression(self, expr, label: int) -> (Node, int):
         if isinstance(expr, Variable):
             assert isinstance(expr.name, str)
         elif isinstance(expr, Constant):
@@ -51,12 +51,12 @@ class AvailableExpressionsAnalysis:
             label = label + 1
             node.label = label
             node.expression = expr
-            self.nodes.append(node)
-            logging.debug("Binary operation Node created: ", self.node.label, "\n")
+            #self.nodes.append(node)
+            logging.debug("Binary operation Node created: ", node.label, "\n")
             return (node, label)
 
     # Dealing with statements (using function above as helper function for expressions)
-    def create_cfg_statement(self, stmt, label: int) -> (Node, list[Node], label):
+    def create_cfg_statement(self, stmt, label: int) -> (Node, list[Node], int):
         node = Node()
         if (label == None):
             label = 0
@@ -74,8 +74,11 @@ class AvailableExpressionsAnalysis:
             # Placing condition node first in while loop/nodes, check if it's correct
             (condition_node, label) = self.create_cfg_expression(stmt.condition, label)
             (root, exits, label) = self.create_cfg_statement(stmt.body, label)
-            node.going_out = [condition_node]
+            # Condition node coming after the current node
+            node.going_out.append(condition_node)
             exits.append(root)
+            # Condition node going out to the root and the last node in the while loop
+            condition_node.going_out.append([root, exits[-1]])
 
             #(root, exits, label) = self.create_cfg_statement(stmt.body, label)
             #node.going_out = [root]
@@ -94,7 +97,7 @@ class AvailableExpressionsAnalysis:
             first = None
             prevs = None
             for s in stmt.statements:
-                (node, exits) = self.create_cfg_statement(s, label)
+                (node, exits, label) = self.create_cfg_statement(s, label)
                 if first is None:
                     first = node
                 if prevs is not None:
