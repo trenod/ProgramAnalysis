@@ -78,7 +78,8 @@ class AvailableExpressionsAnalysis:
             node.going_out.append(condition_node)
             exits.append(root)
             # Condition node going out to the root and the last node in the while loop
-            condition_node.going_out.append([root, exits[-1]])
+            condition_node.going_out.append(root)
+            condition_node.going_out.append(exits[-1])
 
             #(root, exits, label) = self.create_cfg_statement(stmt.body, label)
             #node.going_out = [root]
