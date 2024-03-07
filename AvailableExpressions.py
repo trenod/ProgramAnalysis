@@ -11,6 +11,7 @@ class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
         self.FV: list[(Assignment, int)] = [] #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
+        self.conditions: list[(BinaryOperation, int)] = [] #list of conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
         self.label = 1
         self.previous_node_label = 0
         #self.cfg: list[(int, int)] = []

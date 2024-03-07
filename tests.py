@@ -9,8 +9,6 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
     def setUp(self):
         # Code here will run before each test method
         analysis = AvailableExpressionsAnalysis()
-        self.cfg = analysis.create_cfg(increment_loop)
-        self.nodes = analysis.nodes
 
         (root, exits) = analysis.create_cfg_statement(book_example)
     
@@ -26,8 +24,8 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         # TODO: assert that the result is right.
 
     def test_create_cfg(self):
-        self.previous_node = self.cfg[0]
-        for node in self.cfg:
+        self.previous_node = self.cfg_created[0]
+        for node in self.cfg_created:
             # Check if the node is a tuple
             assert isinstance(node, tuple)
             print("{node}, ")
