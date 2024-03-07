@@ -12,30 +12,9 @@ class AvailableExpressionsAnalysis:
     def __init__(self) -> None:
         self.FV: list[(Assignment, int)] = [] #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.label = 1
-        self.cfg: list[(int, int)] = []
-        self.nodes: list[Node] = []
         self.previous_node_label = 0
-        self.if_then_else = False
-        self.while_loop = False
-        self.is_first_node_in_while = False
-        self.is_last_node_in_while = False
-        self.first_node_in_while: list[Node] = []
-        self.first_node = None
-        self.was_last_node_in_while = False
-        self.last_node_in_while: list[Node] = []
-        self.node = None
-        self.last_node = None
-        self.current_node = None
-        self.previous_node = None
-        self.expr_node = False
-        #self.node_created = False
-
-    # Create the CFG as well as the nodes containing necessary information for doing an analysis (can later move to superclass)
-    #def create_cfg(self, program: Statement) -> list((int, int)):
-    #    assert isinstance(program, CompoundStatement)
-    #    for stmt in program.statements:
-    #        self.create_cfg_statement(stmt)
-    #    return self.cfg
+        #self.cfg: list[(int, int)] = []
+        #self.nodes: list[Node] = []
     
     # Dealing with expressions
     def create_cfg_expression(self, expr) -> Node:
@@ -52,8 +31,6 @@ class AvailableExpressionsAnalysis:
             node.expression = expr
             #self.nodes.append(self.node)
             print("Binary operation Node created: ", node.label, "\n")
-            # Add to control flow graph
-            #self.cfg.append((self.previous_node.label, self.node.label))
             return node
 
     # Dealing with statements (using function above as helper function for expressions)
