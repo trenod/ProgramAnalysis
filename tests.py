@@ -29,7 +29,7 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         self.previous_node = self.cfg[0]
         for node in self.cfg:
             # Check if the node is a tuple
-            isinstance(node, tuple)
+            assert isinstance(node, tuple)
             print("{node}, ")
             # Check if successors have a higher label than predecessors
             # i.e (1, 2) < (2, 3)
@@ -53,7 +53,7 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
 
     def test_book_example(self):
         # Test book example for correct cfg and nodes
-        assert self.cfg_created == [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')]
+        self.assertEqual(self.cfg_created, [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')])
         # Test that the nodes are correct
         self.assertEqual(self.nodes[0].label, 1)
         self.assertEqual(self.nodes[1].label, 2)
