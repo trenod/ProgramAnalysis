@@ -14,8 +14,7 @@ class AvailableExpressionsAnalysis:
         self.conditions: list[(BinaryOperation, int)] = [] #list of conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
         self.label = 1
         self.previous_node_label = 0
-        #self.cfg: list[(int, int)] = []
-        #self.nodes: list[Node] = []
+        self.nodes = {}
     
     # Dealing with expressions
     def create_cfg_expression(self, expr) -> Node:
@@ -117,16 +116,20 @@ class AvailableExpressionsAnalysis:
         print(cfg)
 
 
-def mkDFS(node: Node, seen: Set[Node]): # -> List[(int,int)]:
-    output = []
-    if node in seen:
-        return output
-    seen.add(node)
+    def mkDFS(node: Node, seen: Set[Node]): # -> List[(int,int)]:
+        output = []
+        if node in seen:
+            return output
+        seen.add(node)
+        if node.label not in self.nodes:
+            self.nodes[node.label] = node
 
-    for i in node.going_out:
-        output.append((node.label, i.label))
-        output = output + mkDFS(i, seen)
-    return output
+        for i in node.going_out:
+            if i.label not in self.nodes:
+                self.nodes[i.label] = i
+            output.append((node.label, i.label))
+            output = output + mkDFS(i, seen)
+        return output
 
 
 def main():
@@ -144,9 +147,10 @@ def main():
     for e in exits:
         e.going_out.append(the_exit)
 
-    print(mkDFS(root, set()))
-    # analysis.print_cfg(cfg)
-    # TODO: assert that the result is right.
+    cfg = (analysis.mkDFS(root, set()))
+    print(cfg)
+    # assert that the result is right.
+    assert (cfg == [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')])
     #exit(1)
 
     # Analyze the program
