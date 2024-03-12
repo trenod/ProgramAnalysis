@@ -3,6 +3,7 @@ class Node:
         self.label = None   # Label for this node in the control flow graph
         self.stmt = None    # Statement represented by this node
         self.expression = None # Expression represented by this node
+        self.is_exit = False # True if this node is an exit node
         self.gen = set()    # Expressions generated in this node
         self.kill = set()   # Expressions killed in this node
         self.entry = set()  # Assignments live at entry to this node

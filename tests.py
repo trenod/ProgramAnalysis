@@ -18,10 +18,11 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         the_exit.going_out = []
         for e in exits:
             e.going_out.append(the_exit)
+        the_exit.is_exit = True
+        self.analysis.nodes[dict.keys()[-1] + 1] = the_exit
 
-        self.cfg = (mkDFS(root, set()))
-        # analysis.print_cfg(cfg)
-        # TODO: assert that the result is right.
+        self.cfg = (self.analysis.mkDFS(root, set()))
+        self.nodes = self.analysis.nodes
 
     def test_create_cfg(self):
         self.previous_node = self.cfg[0]
@@ -39,26 +40,26 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             
 
     def test_nodes(self):
-        self.assertEqual(len(self.cfg), len(self.cfg.nodes))
-        for node in self.cfg.nodes:
-            print("Node with label {node.label} has the following information: \n")
-            print("Statement: {node.stmt}\n")
-            print("Expression: {node.expression}\n")
-            print("Predecessors: {node.predecessors}\n")
-            print("Successors: {node.successors}\n")
-            print("Generated expressions: {node.gen}\n")
-            print("Killed expressions: {node.kill}\n")
+        self.assertEqual(len(self.cfg), len(self.nodes))
+        for node in self.nodes.values():
+            print(f"Node with label {node.label} has the following information: \n")
+            print(f"Statement: {node.stmt}\n")
+            print(f"Expression: {node.expression}\n")
+            print(f"Predecessors: {node.predecessors}\n")
+            print(f"Successors: {node.successors}\n")
+            print(f"Generated expressions: {node.gen}\n")
+            print(f"Killed expressions: {node.kill}\n")
 
     def test_book_example(self):
         # Test book example for correct cfg and nodes
         self.assertEqual(self.cfg, [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')])
         # Test that the nodes are correct
-        self.assertEqual(self.nodes[0].label, 1)
-        self.assertEqual(self.nodes[1].label, 2)
-        self.assertEqual(self.nodes[2].label, 3)
-        self.assertEqual(self.nodes[3].label, 4)
-        self.assertEqual(self.nodes[4].label, 5)
-        self.assertEqual(self.nodes[5].label, 'exit')
+        self.assertEqual(self.analysis.nodes[0].label, 1)
+        self.assertEqual(self.analysis.nodes[1].label, 2)
+        self.assertEqual(self.analysis.nodes[2].label, 3)
+        self.assertEqual(self.analysis.nodes[3].label, 4)
+        self.assertEqual(self.analysis.nodes[4].label, 5)
+        self.assertEqual(self.analysis.nodes[5].label, 'exit')
 
     def test_analysis(self):
         pass

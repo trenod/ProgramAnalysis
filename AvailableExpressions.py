@@ -116,7 +116,7 @@ class AvailableExpressionsAnalysis:
         print(cfg)
 
 
-    def mkDFS(node: Node, seen: Set[Node]): # -> List[(int,int)]:
+    def mkDFS(self, node: Node, seen: Set[Node]): # -> List[(int,int)]:
         output = []
         if node in seen:
             return output
@@ -128,7 +128,7 @@ class AvailableExpressionsAnalysis:
             if i.label not in self.nodes:
                 self.nodes[i.label] = i
             output.append((node.label, i.label))
-            output = output + mkDFS(i, seen)
+            output = output + self.mkDFS(i, seen)
         return output
 
 
@@ -146,6 +146,8 @@ def main():
     the_exit.going_out = []
     for e in exits:
         e.going_out.append(the_exit)
+    the_exit.is_exit = True
+    analysis.nodes[dict.keys()[-1] + 1] = the_exit
 
     cfg = (analysis.mkDFS(root, set()))
     print(cfg)
