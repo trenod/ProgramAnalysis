@@ -80,7 +80,9 @@ class TestDynamicProgramStructure(unittest.TestCase):
             self.fail(f"Unknown Expression type: {type(expr)}")
 
     def check_statement(self, stmt):
-        if isinstance(stmt, Assignment):
+        if isinstance(stmt, Skip):
+            pass
+        elif isinstance(stmt, Assignment):
             self.assertIsInstance(stmt.variable, Variable)
             self.check_expression(stmt.variable)
             self.check_expression(stmt.expression)
