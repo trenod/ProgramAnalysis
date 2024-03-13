@@ -42,8 +42,6 @@ conditional_assignment = CompoundStatement([
         CompoundStatement([
             Assignment(Variable('y'), Constant(0))  # ELSE y := 0
         ])
-        #Assignment(Variable('y'), Constant(1)),  # y := 1
-        #Assignment(Variable('y'), Constant(0))  # ELSE y := 0
     )
 ])
 
@@ -85,8 +83,6 @@ while_with_conditional = CompoundStatement([
                 CompoundStatement([
                     Skip()  # ELSE Skip
                 ])
-                #Assignment(Variable('y'), BinaryOperation('+', Variable('y'), Constant(1))),  # y := y + 1
-                #Skip()
             )
         ])
     )

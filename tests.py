@@ -9,9 +9,8 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
     def setUp(self):
         # Code here will run before each test method
         self.analysis = AvailableExpressionsAnalysis()
-
         (root, exits) = self.analysis.create_cfg_statement(book_example)
-    
+
         # Need a final patch-up!
         the_exit = Node()
         the_exit.label = "exit"
@@ -20,9 +19,9 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             e.going_out.append(the_exit)
         the_exit.is_exit = True
 
+        # Creating the CFG also creates the nodes
         self.cfg = (self.analysis.mkDFS(root, set()))
         self.nodes = self.analysis.nodes
-        self.analysis.nodes[len(self.nodes) + 1] = the_exit
 
     def test_create_cfg(self):
         self.previous_node = self.cfg[0]
@@ -30,32 +29,34 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             # Check if the node is a tuple
             assert isinstance(node, tuple)
             print("{node}, ")
-            # Check if successors have a higher label than predecessors
-            # i.e (1, 2) < (2, 3)
             (fst, snd) = node
-            (fstprev, sndprev) = self.previous_node
-            #self.assertLessEqual(fstprev, fst)
-            #self.assertLessEqual(sndprev, snd)
-            self.previous_node = node
-            
+            assert isinstance(fst, int)
+            if snd != 'exit':
+                assert isinstance(snd, int) 
 
     def test_nodes(self):
-        self.assertEqual(len(self.cfg) +1, len(self.nodes))
+        self.assertEqual(len(self.cfg), len(self.nodes))
         for node in self.nodes.values():
             print(f"Node with label {node.label} has the following information: \n")
+            # Either a statement or an expression (or None if it's an exit node)
             print(f"Statement: {node.stmt}\n")
             print(f"Expression: {node.expression}\n")
-            print(f"Coming in: {node.coming_in}\n")
-            print(f"Going out: {node.going_out}\n")
+            print(f"Is exit: {node.is_exit}\n")
+            # Predecessors and successors
+            #print(f"Coming in: {node.coming_in}\n")
+            #print(f"Going out: {node.going_out}\n")
+            # Gen, kill, entry, and exit sets
             print(f"Generated expressions: {node.gen}\n")
             print(f"Killed expressions: {node.kill}\n")
+            print(f"Entry: {node.entry}\n")
+            print(f"Exit: {node.exit}\n")
 
     def test_book_example(self):
         # Test book example for correct cfg and nodes
         self.assertEqual(self.cfg, [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')])
-        # Test that the nodes are correct
-        for i in range(1, (len(self.nodes)-1)):
-            if (i == (len(self.nodes)-1)):
+        # Test that the nodes are correctly labeled
+        for i in range(1, (len(self.nodes))):
+            if (i == (len(self.nodes))):
                 self.assertEqual(self.nodes[i].label, 'exit')
                 break
             self.assertEqual(self.nodes[i].label, i)

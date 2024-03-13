@@ -26,11 +26,8 @@ class AvailableExpressionsAnalysis:
             # Create a node for the expression
             node = Node()
             self.label = self.label + 1
-            print("Label incremented for expr/binaryop: ", self.label, "\n")
             node.label = self.label
             node.expression = expr
-            #self.nodes.append(self.node)
-            print("Binary operation Node created: ", node.label, "\n")
             return node
 
     # Dealing with statements (using function above as helper function for expressions)
@@ -48,8 +45,6 @@ class AvailableExpressionsAnalysis:
             condition = self.create_cfg_expression(stmt.condition)
             (root, exits) = self.create_cfg_statement(stmt.body)
             node.expression = condition.expression
-            print("Condition Node: ", node.label, "\n")
-            print("Condition Node expression: ", node.expression, "\n")
             node.going_out = [root]
             for i in exits:
                 # Careful, don't overwrite, append!
@@ -68,9 +63,7 @@ class AvailableExpressionsAnalysis:
             for s in stmt.statements:
                 (node, exits) = self.create_cfg_statement(s)
                 self.previous_node_label = self.label
-                print("Previous node label: ", self.previous_node_label, "\n")
                 self.label = self.label + 1
-                print("Label incremented: ", self.label, "\n")
                 if first is None:
                     first = node
                 if prevs is not None:
