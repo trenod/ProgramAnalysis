@@ -19,10 +19,10 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         for e in exits:
             e.going_out.append(the_exit)
         the_exit.is_exit = True
-        self.analysis.nodes[dict.keys()[-1] + 1] = the_exit
 
         self.cfg = (self.analysis.mkDFS(root, set()))
         self.nodes = self.analysis.nodes
+        self.analysis.nodes[len(self.nodes) + 1] = the_exit
 
     def test_create_cfg(self):
         self.previous_node = self.cfg[0]
@@ -40,13 +40,13 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             
 
     def test_nodes(self):
-        self.assertEqual(len(self.cfg), len(self.nodes))
+        self.assertEqual(len(self.cfg) +1, len(self.nodes))
         for node in self.nodes.values():
             print(f"Node with label {node.label} has the following information: \n")
             print(f"Statement: {node.stmt}\n")
             print(f"Expression: {node.expression}\n")
-            print(f"Predecessors: {node.predecessors}\n")
-            print(f"Successors: {node.successors}\n")
+            print(f"Coming in: {node.coming_in}\n")
+            print(f"Going out: {node.going_out}\n")
             print(f"Generated expressions: {node.gen}\n")
             print(f"Killed expressions: {node.kill}\n")
 
@@ -54,12 +54,11 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         # Test book example for correct cfg and nodes
         self.assertEqual(self.cfg, [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')])
         # Test that the nodes are correct
-        self.assertEqual(self.analysis.nodes[0].label, 1)
-        self.assertEqual(self.analysis.nodes[1].label, 2)
-        self.assertEqual(self.analysis.nodes[2].label, 3)
-        self.assertEqual(self.analysis.nodes[3].label, 4)
-        self.assertEqual(self.analysis.nodes[4].label, 5)
-        self.assertEqual(self.analysis.nodes[5].label, 'exit')
+        for i in range(1, 6):
+            if (i == 6):
+                self.assertEqual(self.nodes[i].label, 'exit')
+                break
+            self.assertEqual(self.nodes[i].label, i)
 
     def test_analysis(self):
         pass
