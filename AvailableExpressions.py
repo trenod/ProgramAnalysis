@@ -81,15 +81,6 @@ class AvailableExpressionsAnalysis:
             return first, exits
         else:
             assert False, stmt
-
-    #this function is not needed currently
-    def create_cfg_while(self, stmt):
-        for i in range(0, len(stmt.body)):
-            if (i == 0):
-                self.create_cfg_expression(stmt.condition)
-            elif (i == len(stmt.body) - 1):
-                self.create_cfg_expression(stmt.body[i])
-                self.create_cfg_statement(stmt.body[i])
                 
     def analyze(self, nodes: list): #nodes: list of nodes, cfg: control flow graph
         for node in nodes:
@@ -110,11 +101,6 @@ class AvailableExpressionsAnalysis:
 
         for node in nodes:
             print(f"Node {node.label}: Predecessors={node.coming_in} Successors={node.going_out} gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}")
-
-    def print_cfg(self, cfg: list):
-        print("Control Flow Graph: ")
-        print(cfg)
-
 
     def mkDFS(self, node: Node, seen: Set[Node]): # -> List[(int,int)]:
         output = []

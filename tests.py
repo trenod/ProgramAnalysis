@@ -54,8 +54,8 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         # Test book example for correct cfg and nodes
         self.assertEqual(self.cfg, [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')])
         # Test that the nodes are correct
-        for i in range(1, 6):
-            if (i == 6):
+        for i in range(1, (len(self.nodes)-1)):
+            if (i == (len(self.nodes)-1)):
                 self.assertEqual(self.nodes[i].label, 'exit')
                 break
             self.assertEqual(self.nodes[i].label, i)
