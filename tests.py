@@ -17,7 +17,6 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
         the_exit.going_out = []
         for e in exits:
             e.going_out.append(the_exit)
-        the_exit.is_exit = True
 
         # Creating the CFG also creates the nodes
         self.cfg = (self.analysis.mkDFS(root, set()))
@@ -41,7 +40,7 @@ class TestAvailableExpressionsAnalysis(unittest.TestCase):
             # Either a statement or an expression (or None if it's an exit node)
             print(f"Statement: {node.stmt}\n")
             print(f"Expression: {node.expression}\n")
-            print(f"Is exit: {node.is_exit}\n")
+            print(f"Is exit: {node.is_exit()}\n")
             # Predecessors and successors
             #print(f"Coming in: {node.coming_in}\n")
             #print(f"Going out: {node.going_out}\n")

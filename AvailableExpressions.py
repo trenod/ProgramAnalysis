@@ -126,7 +126,7 @@ def main():
     for e in exits:
         e.going_out.append(the_exit)
     the_exit.is_exit = True
-    analysis.nodes[dict.keys()[-1] + 1] = the_exit
+    analysis.nodes[len(analysis.nodes)] = the_exit
 
     cfg = (analysis.mkDFS(root, set()))
     print(cfg)
