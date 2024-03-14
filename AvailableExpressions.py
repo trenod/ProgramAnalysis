@@ -127,7 +127,6 @@ def main():
     the_exit.going_out = []
     for e in exits:
         e.going_out.append(the_exit)
-    the_exit.is_exit = True
     analysis.nodes[len(analysis.nodes)] = the_exit
 
     cfg = (analysis.mkDFS(root, set()))
@@ -145,6 +144,13 @@ def main():
     # Analysis pipeline for available expressions
     for program in [book_example, increment_loop, conditional_assignment, nested_loops, while_with_conditional]:
         (root, exits) = analysis.create_cfg_statement(program)
+        # Need a final patch-up!
+        the_exit = Node()
+        the_exit.label = "exit"
+        the_exit.going_out = []
+        for e in exits:
+            e.going_out.append(the_exit)
+        analysis.nodes[len(analysis.nodes)] = the_exit
         cfg = (analysis.mkDFS(root, set()))
         analysis.analyze(analysis.nodes)
         analysis.print_nodes(analysis.nodes, cfg)
