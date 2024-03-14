@@ -3,7 +3,6 @@ class Node:
         self.label = None   # Label for this node in the control flow graph
         self.stmt = None    # Statement represented by this node
         self.expression = None # Expression represented by this node
-        self.is_exit = False # True if this node is an exit node
         self.gen = set()    # Expressions generated in this node
         self.kill = set()   # Expressions killed in this node
         self.entry = set()  # Assignments live at entry to this node
@@ -18,6 +17,9 @@ class Node:
         while current is not None:
             yield current
             current = current.next
+
+    def is_exit(self):
+        return self.going_out == []
 
     def add_predecessor(self, pred_node):
         """Add a predecessor node and automatically update the coming_in list."""
