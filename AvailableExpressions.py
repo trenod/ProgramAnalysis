@@ -14,7 +14,8 @@ class AvailableExpressionsAnalysis:
         self.expressions: dict[(int, BinaryOperation)] = {} #dict of expressions/conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
         self.assignments: dict[(int, Statement)] = {} #dict of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.label = 1
-        self.previous_node_label = 0
+        #self.previous_node_label = 0
+        self.previous_node = None
         self.nodes = {}
     
     # Dealing with expressions
@@ -63,7 +64,7 @@ class AvailableExpressionsAnalysis:
             prevs = None
             for s in stmt.statements:
                 (node, exits) = self.create_cfg_statement(s)
-                self.previous_node_label = self.label
+                #self.previous_node_label = self.label
                 self.label = self.label + 1
                 if first is None:
                     first = node
@@ -78,6 +79,10 @@ class AvailableExpressionsAnalysis:
                 
     def analyze(self, nodes: list): #nodes: list of nodes, cfg: control flow graph
         for node in nodes:
+            if previous_node is not None:
+                node.entry = previous_node.exit
+            else:
+                node.entry = []
             if node.expression is not None:
                 if node.expression in self.expressions.values():
                     node.gen = node.expression
@@ -89,6 +94,8 @@ class AvailableExpressionsAnalysis:
                     node.gen = node.stmt
                 else:
                     node.kill = node.stmt
+            node.exit = node.gen.union(node.entry.difference(node.kill))
+            previous_node = node
                 
     def print_nodes(self, nodes : list, cfg : list):
         print("Control Flow Graph: ")
