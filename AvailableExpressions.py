@@ -95,11 +95,11 @@ class AvailableExpressionsAnalysis:
             node.exit = node.gen.union(node.entry.difference(node.kill))
             self.previous_node = node
                 
-    def print_nodes(self, nodes : list, cfg : list):
+    def print_nodes(self, nodes : dict, cfg : list):
         print("Control Flow Graph: ")
         print(f"{cfg}\n")
 
-        for node in nodes:
+        for node in nodes.values():
             print(f"Node {node.label}: Predecessors={node.coming_in} Successors={node.going_out} gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}\n")
 
     def mkDFS(self, node: Node, seen: Set[Node]): # -> List[(int,int)]:
