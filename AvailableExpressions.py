@@ -10,8 +10,9 @@ from node import *
 class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
-        self.FV: list[(Assignment, int)] = [] #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
-        self.conditions: list[(BinaryOperation, int)] = [] #list of conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
+        self.FV: list[(Statement.variable)] = [] #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
+        self.expressions: dict[(int, BinaryOperation)] = {} #dict of expressions/conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
+        self.assignments: dict[(int, Statement)] = {} #dict of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.label = 1
         self.previous_node_label = 0
         self.nodes = {}
@@ -78,22 +79,23 @@ class AvailableExpressionsAnalysis:
     def analyze(self, nodes: list): #nodes: list of nodes, cfg: control flow graph
         for node in nodes:
             if node.expression is not None:
-                if node.expression in self.FV:
+                if node.expression in self.expressions.values():
                     node.gen = node.expression
 
             elif node.stmt is not None:
-                if node.stmt not in self.FV:
-                    self.FV.append((node.stmt, node.label))
+                if node.stmt.variable not in self.FV:
+                    self.FV.append(node.stmt.variable)
+                    self.assignments[node.label] = node.stmt
                     node.gen = node.stmt
                 else:
                     node.kill = node.stmt
                 
     def print_nodes(self, nodes : list, cfg : list):
         print("Control Flow Graph: ")
-        print(cfg)
+        print(f"{cfg}\n")
 
         for node in nodes:
-            print(f"Node {node.label}: Predecessors={node.coming_in} Successors={node.going_out} gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}")
+            print(f"Node {node.label}: Predecessors={node.coming_in} Successors={node.going_out} gen={node.gen}, kill={node.kill}, entry={node.entry}, exit={node.exit}\n")
 
     def mkDFS(self, node: Node, seen: Set[Node]): # -> List[(int,int)]:
         output = []
@@ -135,11 +137,17 @@ def main():
     #exit(1)
 
     # Analyze the program
-    #nodes = analysis.nodes
-    #analysis.analyze(nodes)
+    analysis.analyze(analysis.nodes)
 
     # Print the results
     #analysis.print_nodes(nodes, cfg)
+
+    # Analysis pipeline for available expressions
+    for program in [book_example, increment_loop, conditional_assignment, nested_loops, while_with_conditional]:
+        (root, exits) = analysis.create_cfg_statement(program)
+        cfg = (analysis.mkDFS(root, set()))
+        analysis.analyze(analysis.nodes)
+        analysis.print_nodes(analysis.nodes, cfg)
 
 if __name__ == "__main__":
     main()
