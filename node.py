@@ -21,26 +21,13 @@ class Node:
     def is_exit(self):
         return self.going_out == []
 
-    def add_predecessor(self, pred_node):
-        """Add a predecessor node and automatically update the coming_in list."""
-        if pred_node not in self.coming_in:
-            self.coming_in.append(pred_node)
-        if self not in pred_node.going_out:
-            pred_node.going_out.append(self)
-            
-
-    # this function not needed? (logic already in above function)
-    def add_successor(self, succ_node):
-        """Add a successor node and automatically update the going_out list."""
-        if succ_node not in self.going_out:
-            self.going_out.append(succ_node)
-            succ_node.coming_in.append(self)
-            self.going_out.append(succ_node)
-
     def __repr__(self):
         return f"Node(label={self.label})"
+    
+    def __hash__(self):
+        return hash(self.label)
 
-    '''
-    def __repr__(self):
-        return f"Node(entry={self.entry}, exit={self.exit})"
-    '''
+    def __eq__(self, other):
+        if isinstance(other, Node):
+            return self.label == other.label
+        return False
