@@ -83,16 +83,21 @@ class AvailableExpressionsAnalysis:
                 node.entry = self.previous_node.exit
             if node.expression is not None:
                 if node.expression in self.expressions.values():
-                    node.gen = node.expression
+                    node.gen.add(node.expression)
 
             elif node.stmt is not None:
                 if node.stmt.variable not in self.FV:
                     self.FV.append(node.stmt.variable)
                     self.assignments[node.label] = node.stmt
-                    node.gen = node.stmt
+                    node.gen.add(node.stmt)
                 else:
-                    node.kill = node.stmt
-            node.exit = node.gen.union(node.entry.difference(node.kill))
+                    node.kill.add(node.stmt)
+            diff = node.entry.difference(node.kill)
+            print(f"Diff type: {type(diff)}")
+            print(f"Node.exit type: {type(node.exit)}")
+            print(f"Node.gen type: {type(node.gen)}")
+            node.exit = node.gen.union(diff)
+            #node.exit = node.gen.union(node.entry.difference(node.kill))
             self.previous_node = node
                 
     def print_nodes(self, nodes : dict, cfg : list):
