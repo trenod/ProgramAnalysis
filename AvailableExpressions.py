@@ -38,7 +38,11 @@ class AvailableExpressionsAnalysis:
         node.label = self.label  # str(self.label)+str(stmt.__class__)
         node.going_out = []
         # self.nodes.append(self.node)
-        if isinstance(stmt, Assignment):
+        if isinstance(stmt, Skip):
+            node.stmt = stmt
+            logging.debug("Skip Node created: ", node.label, "\n")
+            return node, [node]
+        elif isinstance(stmt, Assignment):
             node.stmt = stmt
             logging.debug("Stmt Node created: ", node.label, "\n")
             return node, [node]
@@ -93,12 +97,18 @@ class AvailableExpressionsAnalysis:
                 else:
                     node.kill.add(node.stmt)
             diff = node.entry.difference(node.kill)
-            print(f"Diff type: {type(diff)}")
-            print(f"Node.exit type: {type(node.exit)}")
-            print(f"Node.gen type: {type(node.gen)}")
+            #print(f"Diff type: {type(diff)}")
+            #print(f"Node.exit type: {type(node.exit)}")
+            #print(f"Node.gen type: {type(node.gen)}")
             node.exit = node.gen.union(diff)
             #node.exit = node.gen.union(node.entry.difference(node.kill))
             self.previous_node = node
+
+    def print_analysis_results(self, nodes : dict, cfg : list):
+        print("Available Expressions Analysis \n")
+        print(f"for program with control flow graph: {cfg}\n")
+        for node in nodes.values():
+            print(f"Node {node.label}: \n\n entry={node.entry}\n\n exit={node.exit}\n\n\n")
                 
     def print_nodes(self, nodes : dict, cfg : list):
         print("Control Flow Graph: ")
@@ -127,6 +137,24 @@ def main():
     #Available expressions analysis:
     analysis = AvailableExpressionsAnalysis()
 
+    '''
+    # Analysis pipeline for available expressions
+    for program in [book_example, increment_loop, conditional_assignment, nested_loops, while_with_conditional]:
+        (root, exits) = analysis.create_cfg_statement(program)
+        # Need a final patch-up!
+        the_exit = Node()
+        the_exit.label = "exit"
+        the_exit.going_out = []
+        for e in exits:
+            e.going_out.append(the_exit)
+        analysis.nodes[len(analysis.nodes)] = the_exit
+        cfg = (analysis.mkDFS(root, set()))
+        analysis.analyze(analysis.nodes)
+
+        analysis.print_nodes(analysis.nodes, cfg)
+    '''
+
+    
     # Create the CFG, with nodes containing necessary information for doing an analysis
     (root, exits) = analysis.create_cfg_statement(book_example)
     print(root, exits)
@@ -140,7 +168,7 @@ def main():
     analysis.nodes[len(analysis.nodes)] = the_exit
 
     cfg = (analysis.mkDFS(root, set()))
-    print(cfg)
+    #print(cfg)
     # assert that the result is right.
     assert (cfg == [(1, 2), (2, 3), (3, 4), (4,5), (5, 3), (3, 'exit')])
     #exit(1)
@@ -149,21 +177,9 @@ def main():
     analysis.analyze(analysis.nodes)
 
     # Print the results
-    #analysis.print_nodes(nodes, cfg)
-
-    # Analysis pipeline for available expressions
-    for program in [book_example, increment_loop, conditional_assignment, nested_loops, while_with_conditional]:
-        (root, exits) = analysis.create_cfg_statement(program)
-        # Need a final patch-up!
-        the_exit = Node()
-        the_exit.label = "exit"
-        the_exit.going_out = []
-        for e in exits:
-            e.going_out.append(the_exit)
-        analysis.nodes[len(analysis.nodes)] = the_exit
-        cfg = (analysis.mkDFS(root, set()))
-        analysis.analyze(analysis.nodes)
-        analysis.print_nodes(analysis.nodes, cfg)
+    analysis.print_analysis_results(analysis.nodes, cfg)
+    
+    
 
 if __name__ == "__main__":
     main()

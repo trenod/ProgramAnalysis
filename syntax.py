@@ -128,5 +128,8 @@ class IfThenElse(Statement):
                 self.true_branch == other.true_branch and self.false_branch == other.false_branch)
 
 class Skip(Statement):
+    def __init__(self):
+        self.variable = None
+        self.expression = None
     def __repr__(self):
         return "Skip"
