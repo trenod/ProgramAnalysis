@@ -4,6 +4,9 @@ from typing import List, Union, Callable, Set
 from syntax import *
 from examples import *
 from node import *
+import pdb; pdb.set_trace()
+
+logging.basicConfig(filename='AEAnalysis.log', level=logging.DEBUG)
 
 
 # Available Expressions Analysis
@@ -94,6 +97,7 @@ class AvailableExpressionsAnalysis:
                     self.FV.append(node.stmt.variable)
                     self.assignments[node.label] = node.stmt
                     node.gen.add(node.stmt)
+                    #breakpoint()
                 else:
                     node.kill.add(node.stmt)
             diff = node.entry.difference(node.kill)
