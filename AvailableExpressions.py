@@ -99,8 +99,9 @@ class AvailableExpressionsAnalysis:
                     node.gen.add(node.stmt.expression)
                     #breakpoint()
                 else:
-                    node.kill.add(node.stmt)
+                    node.kill.add(node.stmt.expression)
             diff = node.entry.difference(node.kill)
+            # TODO: Take node.going_out / node.coming_in into account
             #print(f"Diff type: {type(diff)}")
             #print(f"Node.exit type: {type(node.exit)}")
             #print(f"Node.gen type: {type(node.gen)}")
