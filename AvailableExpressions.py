@@ -4,9 +4,9 @@ from typing import List, Union, Callable, Set
 from syntax import *
 from examples import *
 from node import *
-import pdb; pdb.set_trace()
+#import pdb; pdb.set_trace()
 
-logging.basicConfig(filename='AEAnalysis.log', level=logging.DEBUG)
+#logging.basicConfig(filename='AEAnalysis.log', level=logging.DEBUG)
 
 
 # Available Expressions Analysis
@@ -96,7 +96,7 @@ class AvailableExpressionsAnalysis:
                 if node.stmt.variable not in self.FV:
                     self.FV.append(node.stmt.variable)
                     self.assignments[node.label] = node.stmt
-                    node.gen.add(node.stmt)
+                    node.gen.add(node.stmt.expression)
                     #breakpoint()
                 else:
                     node.kill.add(node.stmt)
@@ -111,6 +111,9 @@ class AvailableExpressionsAnalysis:
     def print_analysis_results(self, nodes : dict, cfg : list):
         print("Available Expressions Analysis \n")
         print(f"for program with control flow graph: {cfg}\n")
+        for node in nodes.values():
+            print(f"Node: {node.label}\n")
+
         for node in nodes.values():
             print(f"Node {node.label}: \n\n entry={node.entry}\n\n exit={node.exit}\n\n\n")
                 
@@ -168,8 +171,9 @@ def main():
     the_exit.label = "exit"
     the_exit.going_out = []
     for e in exits:
+        print(f"exit: {e}")
         e.going_out.append(the_exit)
-    analysis.nodes[len(analysis.nodes)] = the_exit
+    #analysis.nodes[len(analysis.nodes)] = the_exit
 
     cfg = (analysis.mkDFS(root, set()))
     #print(cfg)
