@@ -85,36 +85,60 @@ class AvailableExpressionsAnalysis:
             assert False, stmt
                 
     def analyze(self, nodes: dict): #nodes: list of nodes, cfg: control flow graph
-        for node in nodes.values():
-            if self.previous_node is not None:
-                node.entry = self.previous_node.exit
-            if node.expression is not None:
-                if node.expression in self.expressions.values():
-                    node.gen.add(node.expression)
-
-            elif node.stmt is not None:
-                if node.stmt.variable not in self.FV:
-                    self.FV.append(node.stmt.variable)
-                    self.assignments[node.label] = node.stmt
-                    node.gen.add(node.stmt.expression)
-                    #breakpoint()
+        # Now we need to iterate over the nodes to find the entry and exit sets
+        # for each node. We can do this by iterating over the nodes in the CFG
+        # and updating the entry and exit sets until they don't change anymore.
+        # This is called chaotic iteration.
+        changed = True
+        onechange = False
+        iterationcount = 0 #for debugging
+        while (changed):
+            iterationcount += 1
+            print(f"Iteration {iterationcount}")
+            for node in nodes.values():
+                if self.previous_node is not None:
+                    node.entry = self.previous_node.exit
                 else:
-                    node.kill.add(node.stmt.expression)
-            diff = node.entry.difference(node.kill)
-            # TODO: Take node.going_out / node.coming_in into account
-            #print(f"Diff type: {type(diff)}")
-            #print(f"Node.exit type: {type(node.exit)}")
-            #print(f"Node.gen type: {type(node.gen)}")
-            node.exit = node.gen.union(diff)
-            #node.exit = node.gen.union(node.entry.difference(node.kill))
-            self.previous_node = node
+                    node.entry = set()
+                if node.expression is not None:
+                    if node.expression in self.expressions.values() and node.expression not in node.gen:
+                        node.gen.add(node.expression)
+                        onechange = True
+                elif node.stmt is not None:
+                    if node.stmt.variable not in self.FV:
+                        self.FV.append(node.stmt.variable)
+                        self.assignments[node.label] = node.stmt
+                        node.gen.add(node.stmt.expression)
+                        onechange = True
+                    else:
+                        if node.stmt.expression not in node.kill:
+                            node.kill.add(node.stmt.expression)
+                            onechange = True
+                diff = node.entry.difference(node.kill)
+                # TODO: Take node.going_out / node.coming_in into account
+                #print(f"Diff type: {type(diff)}")
+                #print(f"Node.exit type: {type(node.exit)}")
+                #print(f"Node.gen type: {type(node.gen)}")
+                node.exit = node.gen.union(diff)
+                #node.exit = node.gen.union(node.entry.difference(node.kill))
+                self.previous_node = node
+            if not onechange:
+                print("No change in this iteration (are we done?)")
+                changed = False
+            else:
+                print("One or more changes in this iteration")
+                onechange = False
+        print("Analysis done")
 
     def print_analysis_results(self, nodes : dict, cfg : list):
         print("Available Expressions Analysis \n")
         print(f"for program with control flow graph: {cfg}\n")
+        print("Nodes in the program: \n\n")
         for node in nodes.values():
             print(f"Node: {node.label}\n")
 
+        print("\n\n\n")
+        print("Results: \n\n")
         for node in nodes.values():
             print(f"Node {node.label}: \n\n entry={node.entry}\n\n exit={node.exit}\n\n\n")
                 
