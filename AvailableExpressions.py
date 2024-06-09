@@ -13,7 +13,7 @@ from node import *
 class AvailableExpressionsAnalysis:
 
     def __init__(self) -> None:
-        self.FV: list[(Statement.variable)] = [] #list of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
+        self.FV: dict[(Statement.variable, Statement.expression)] = {} #dict of assignments variables with corresponding expression, stored as Assignment for parsing Variable and Expression
         self.expressions: dict[(int, BinaryOperation)] = {} #dict of expressions/conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
         self.assignments: dict[(int, Statement)] = {} #dict of assignments with corresponding label, stored as Assignment for parsing Variable and Expression
         self.label = 1
@@ -100,18 +100,20 @@ class AvailableExpressionsAnalysis:
                     node.entry = self.previous_node.exit
                 else:
                     node.entry = set()
+                '''
                 if node.expression is not None:
                     if node.expression in self.expressions.values() and node.expression not in node.gen:
                         node.gen.add(node.expression)
                         onechange = True
-                elif node.stmt is not None:
-                    if node.stmt.variable not in self.FV:
-                        self.FV.append(node.stmt.variable)
-                        self.assignments[node.label] = node.stmt
+                '''
+                if node.stmt is not None:
+                    if node.stmt.variable not in self.FV.keys():
+                        self.FV[node.stmt.variable] = node.stmt.expression
+                        #self.assignments[node.label] = node.stmt
                         node.gen.add(node.stmt.expression)
                         onechange = True
-                    else:
-                        if node.stmt.expression not in node.kill:
+                    elif node.stmt.variable in self.FV.keys():
+                        if node.stmt.expression not in node.kill and node.stmt.expression in self.FV.values():
                             node.kill.add(node.stmt.expression)
                             onechange = True
                 diff = node.entry.difference(node.kill)
@@ -122,6 +124,7 @@ class AvailableExpressionsAnalysis:
                 node.exit = node.gen.union(diff)
                 #node.exit = node.gen.union(node.entry.difference(node.kill))
                 self.previous_node = node
+            self.previous_node = None
             if not onechange:
                 print("No change in this iteration (are we done?)")
                 changed = False
