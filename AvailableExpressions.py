@@ -89,6 +89,8 @@ class AvailableExpressionsAnalysis:
         # for each node. We can do this by iterating over the nodes in the CFG
         # and updating the entry and exit sets until they don't change anymore.
         # This is called chaotic iteration.
+
+        # TODO: Use the CFG to iterate over the nodes in the right order
         changed = True
         onechange = False
         iterationcount = 0 #for debugging
