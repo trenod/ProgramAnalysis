@@ -84,20 +84,34 @@ class AvailableExpressionsAnalysis:
         else:
             assert False, stmt
                 
-    def analyze(self, nodes: dict): #nodes: list of nodes, cfg: control flow graph
+    def analyze(self, nodes: dict, cfg): #nodes: list of nodes, cfg: control flow graph
         # Now we need to iterate over the nodes to find the entry and exit sets
         # for each node. We can do this by iterating over the nodes in the CFG
         # and updating the entry and exit sets until they don't change anymore.
         # This is called chaotic iteration.
 
         # TODO: Use the CFG to iterate over the nodes in the right order
+        cfglist = []
+        nodelist = {}
+        for elem in cfg:
+            print(f"CFG element: {elem}")
+            (fst, snd) = elem
+            cfglist.append(fst)
+            cfglist.append(snd)
+        cfglist.remove('exit')
+
+        for elem in cfglist:
+            for node in nodes.values():
+                if node.label == elem:
+                    nodelist[node.label] = node
+
         changed = True
         onechange = False
         iterationcount = 0 #for debugging
         while (changed):
             iterationcount += 1
             print(f"Iteration {iterationcount}")
-            for node in nodes.values():
+            for node in nodelist.values(): #nodes.values():
                 if self.previous_node is not None:
                     node.entry = self.previous_node.exit
                 else:
@@ -212,7 +226,7 @@ def main():
     #exit(1)
 
     # Analyze the program
-    analysis.analyze(analysis.nodes)
+    analysis.analyze(analysis.nodes, cfg)
 
     # Print the results
     analysis.print_analysis_results(analysis.nodes, cfg)
