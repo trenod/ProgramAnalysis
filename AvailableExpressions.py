@@ -20,6 +20,8 @@ class AvailableExpressionsAnalysis:
         #self.previous_node_label = 0
         self.previous_node: Node = None
         self.nodes = {}
+        self.kill: dict[(Node, BinaryOperation)] = {} #dict of expressions/conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
+        self.gen: dict[(Node, BinaryOperation)] = {} #dict of expressions/conditions with corresponding label, stored as BinaryOperation for parsing Variable and Expression
     
     # Dealing with expressions
     def create_cfg_expression(self, expr) -> Node:
@@ -107,6 +109,7 @@ class AvailableExpressionsAnalysis:
 
         changed = True
         onechange = False
+        killed = False
         iterationcount = 0 #for debugging
         while (changed):
             iterationcount += 1
@@ -127,10 +130,20 @@ class AvailableExpressionsAnalysis:
                         self.FV[node.stmt.variable] = node.stmt.expression
                         #self.assignments[node.label] = node.stmt
                         node.gen.add(node.stmt.expression)
+                        self.gen[node] = node.stmt.expression
                         onechange = True
                     elif node.stmt.variable in self.FV.keys():
                         if node.stmt.expression not in node.kill and node.stmt.expression in self.FV.values():
                             node.kill.add(node.stmt.expression)
+                            self.kill[node] = node.stmt.expression
+                            #for key, value in self.FV.items():
+                             #   if value == node.stmt.expression:
+                              #      self.FV[key] = None
+                                    #self.kill.add(node.stmt.expression)
+                               #     onechange = True
+                            #print(list(nodelist.keys())[list(nodelist.values()).index(16)])
+                            #self.FV[node.stmt.variable] = None
+                            #self.kill.add(node.stmt.expression)
                             onechange = True
                 diff = node.entry.difference(node.kill)
                 # TODO: Take node.going_out / node.coming_in into account
@@ -139,6 +152,12 @@ class AvailableExpressionsAnalysis:
                 #print(f"Node.gen type: {type(node.gen)}")
                 node.exit = node.gen.union(diff)
                 #node.exit = node.gen.union(node.entry.difference(node.kill))
+                if (killed):
+                    for node in nodelist.values():
+                        if node.stmt.expression in self.kill:
+                            node.kill.add(node.stmt.expression)
+                            killed = False
+
                 self.previous_node = node
             self.previous_node = None
             if not onechange:
