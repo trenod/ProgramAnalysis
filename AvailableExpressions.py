@@ -92,7 +92,8 @@ class AvailableExpressionsAnalysis:
         # and updating the entry and exit sets until they don't change anymore.
         # This is called chaotic iteration.
 
-        # TODO: Use the CFG to iterate over the nodes in the right order
+        # Using the CFG to iterate over the nodes in the right order
+        # Creating a list of nodes in the right order
         cfglist = []
         nodelist = {}
         for elem in cfg:
@@ -102,19 +103,24 @@ class AvailableExpressionsAnalysis:
             cfglist.append(snd)
         cfglist.remove('exit')
 
+        # Creating a dictionary of nodes
         for elem in cfglist:
             for node in nodes.values():
                 if node.label == elem:
                     nodelist[node.label] = node
 
+        # Booleans for checking if the entry and exit sets have changed
         changed = True
         onechange = False
         killed = False
         iterationcount = 0 #for debugging
+        # Chaotic iteration while the entry and exit sets are changing
         while (changed):
             iterationcount += 1
             print(f"Iteration {iterationcount}")
+            # Iterate over the nodes in the CFG
             for node in nodelist.values(): #nodes.values():
+                # Calculate the entry set for the node
                 if self.previous_node is not None:
                     node.entry = self.previous_node.exit
                 else:
@@ -125,22 +131,23 @@ class AvailableExpressionsAnalysis:
                         node.gen.add(node.expression)
                         onechange = True
                 '''
+                # Calculate the gen set for the node
                 if node.stmt is not None:
                     if node.stmt.variable not in self.FV.keys():
                         self.FV[node.stmt.variable] = node.stmt.expression
                         #self.assignments[node.label] = node.stmt
                         node.gen.add(node.stmt.expression)
-                        self.gen[node] = node.stmt.expression
+                        #self.gen[node] = node.stmt.expression
                         onechange = True
+                    # If the variable is already in the FV, check if the expression is different
                     elif node.stmt.variable in self.FV.keys():
                         if node.stmt.expression not in node.kill and node.stmt.expression in self.FV.values():
                             node.kill.add(node.stmt.expression)
-                            self.kill[node] = node.stmt.expression
-                            #for key, value in self.FV.items():
-                             #   if value == node.stmt.expression:
-                              #      self.FV[key] = None
-                                    #self.kill.add(node.stmt.expression)
-                               #     onechange = True
+                            for nextnode in nodelist.values():
+                                if node.stmt.expression in nextnode.entry:
+                                    nextnode.entry.remove(node.stmt.expression)
+                                if node.stmt.expression in nextnode.exit:
+                                    nextnode.exit.remove(node.stmt.expression)
                             #print(list(nodelist.keys())[list(nodelist.values()).index(16)])
                             #self.FV[node.stmt.variable] = None
                             #self.kill.add(node.stmt.expression)
@@ -152,12 +159,6 @@ class AvailableExpressionsAnalysis:
                 #print(f"Node.gen type: {type(node.gen)}")
                 node.exit = node.gen.union(diff)
                 #node.exit = node.gen.union(node.entry.difference(node.kill))
-                if (killed):
-                    for node in nodelist.values():
-                        if node.stmt.expression in self.kill:
-                            node.kill.add(node.stmt.expression)
-                            killed = False
-
                 self.previous_node = node
             self.previous_node = None
             if not onechange:
