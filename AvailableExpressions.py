@@ -95,7 +95,7 @@ class AvailableExpressionsAnalysis:
         # Using the CFG to iterate over the nodes in the right order
         # Creating a list of nodes in the right order
         cfglist = []
-        nodelist = {}
+        newnodes = {}
         for elem in cfg:
             print(f"CFG element: {elem}")
             (fst, snd) = elem
@@ -104,10 +104,10 @@ class AvailableExpressionsAnalysis:
         cfglist.remove('exit')
 
         # Creating a dictionary of nodes
-        for elem in cfglist:
-            for node in nodes.values():
-                if node.label == elem:
-                    nodelist[node.label] = node
+        #for elem in cfglist:
+        #    for node in nodes.values():
+        #        if node.label == elem:
+        #            nodelist.append(node.label)
 
         # Booleans for checking if the entry and exit sets have changed
         changed = True
@@ -115,43 +115,75 @@ class AvailableExpressionsAnalysis:
         #killed = False
         iterationcount = 0 #for debugging
         # Chaotic iteration while the entry and exit sets are changing
+        '''
+        while changed:
+            changed = False
+            iterationcount += 1
+
+            for node_label in cfglist:
+                node = nodes[node_label]
+                if node.coming_in:
+                    node.entry = set().union(*[pred.exit for pred in node.coming_in])
+                else:
+                    node.entry = set()
+
+                new_exit = node.gen.union(node.entry.difference(node.kill))
+                if new_exit != node.exit:
+                    node.exit = new_exit
+                    changed = True
+
+        return nodes
+        '''
         while (changed):
             iterationcount += 1
             print(f"Iteration {iterationcount}")
             # Iterate over the nodes in the CFG
-            for node in nodelist.values(): #nodes.values():
+            for nodelabel in cfglist: #nodes.values():
+                # Get the node
+                node = nodes[nodelabel]
                 # Calculate the entry set for the node
                 if self.previous_node is not None:
                     node.entry = self.previous_node.exit
                 else:
                     node.entry = set()
-                '''
-                if node.expression is not None:
-                    if node.expression in self.expressions.values() and node.expression not in node.gen:
-                        node.gen.add(node.expression)
-                        onechange = True
-                '''
+                
+                #if node.expression is not None:
+                #    if node.expression in self.expressions.values() and node.expression not in node.gen:
+                #        node.gen.add(node.expression)
+                #        onechange = True
+                
                 # Calculate the gen set for the node
                 if node.stmt is not None:
                     if node.stmt.variable not in self.FV.keys():
                         self.FV[node.stmt.variable] = node.stmt.expression
                         #self.assignments[node.label] = node.stmt
                         node.gen.add(node.stmt.expression)
+                        print(f"Node {node.label} gen: {node.gen}")
                         #self.gen[node] = node.stmt.expression
                         # Register that changes have been made
                         onechange = True
                     # Check if the variable changes any generated expressions
-                    elif node.stmt.variable in self.FV.values():
+                    elif node.stmt.variable in self.FV.keys():
                         if node.stmt.expression not in node.kill: #and node.stmt.expression in self.FV.values():
                             node.kill.add(node.stmt.expression)
+                            print(f"Node {node.label} kill: {node.kill}")
                             # Iterating through subsequent nodes to remove the expression from their entry and exit sets
-                            for nextnode in nodelist.values():
-                                if nextnode.label > node.label:
+                            for nextnodelabel in cfglist:
+                                nextnode = nodes[nextnodelabel]
+                                if nextnodelabel > node.label:
                                     for expr in nextnode.entry:
-                                        if node.stmt.variable in expr:
+                                        print(f"Nextnode entry: {nextnode.entry}")
+                                        print(f"Expr: {expr}")
+                                        exprvariables = []
+                                        exprvariables.append(expr.left)
+                                        print(f"Expr left: {expr.left}")
+                                        exprvariables.append(expr.right)
+                                        print(f"Expr right: {expr.right}")
+                                        print(f"Variable {node.stmt.variable} in expression {expr}")
+                                        if node.stmt.variable in exprvariables:
                                             nextnode.entry.remove(expr)
                                     for expr in nextnode.exit:
-                                        if node.stmt.variable in expr:
+                                        if node.stmt.variable in exprvariables:
                                             nextnode.exit.remove(expr)
                             #print(list(nodelist.keys())[list(nodelist.values()).index(16)])
                             #self.FV[node.stmt.variable] = None
@@ -166,6 +198,7 @@ class AvailableExpressionsAnalysis:
                 node.exit = node.gen.union(diff)
                 #node.exit = node.gen.union(node.entry.difference(node.kill))
                 self.previous_node = node
+                newnodes[node.label] = node
             self.previous_node = None
             if not onechange:
                 print("No change in this iteration (are we done?)")
@@ -174,6 +207,8 @@ class AvailableExpressionsAnalysis:
                 print("One or more changes in this iteration")
                 onechange = False
         print("Analysis done")
+        return newnodes
+        
 
     def print_analysis_results(self, nodes : dict, cfg : list):
         print("Available Expressions Analysis \n")
@@ -252,10 +287,11 @@ def main():
     #exit(1)
 
     # Analyze the program
-    analysis.analyze(analysis.nodes, cfg)
+    newnodes = analysis.analyze(analysis.nodes, cfg)
 
     # Print the results
-    analysis.print_analysis_results(analysis.nodes, cfg)
+    #analysis.print_analysis_results(analysis.nodes, cfg)
+    analysis.print_analysis_results(newnodes, cfg)
     
     
 
