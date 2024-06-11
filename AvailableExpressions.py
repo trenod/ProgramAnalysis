@@ -170,7 +170,7 @@ class AvailableExpressionsAnalysis:
                             # Iterating through subsequent nodes to remove the expression from their entry and exit sets
                             for nextnodelabel in cfglist:
                                 nextnode = nodes[nextnodelabel]
-                                if nextnodelabel > node.label:
+                                if nextnode.label > node.label:
                                     for expr in nextnode.entry:
                                         print(f"Nextnode entry: {nextnode.entry}")
                                         print(f"Expr: {expr}")
@@ -259,11 +259,11 @@ def main():
         the_exit.going_out = []
         for e in exits:
             e.going_out.append(the_exit)
-        analysis.nodes[len(analysis.nodes)] = the_exit
+        #analysis.nodes[len(analysis.nodes)] = the_exit
         cfg = (analysis.mkDFS(root, set()))
-        analysis.analyze(analysis.nodes)
+        newnodes = analysis.analyze(analysis.nodes, cfg)
 
-        analysis.print_nodes(analysis.nodes, cfg)
+        analysis.print_analysis_results(newnodes, cfg)
     '''
 
     
