@@ -112,7 +112,7 @@ class AvailableExpressionsAnalysis:
         # Booleans for checking if the entry and exit sets have changed
         changed = True
         onechange = False
-        killed = False
+        #killed = False
         iterationcount = 0 #for debugging
         # Chaotic iteration while the entry and exit sets are changing
         while (changed):
@@ -138,19 +138,25 @@ class AvailableExpressionsAnalysis:
                         #self.assignments[node.label] = node.stmt
                         node.gen.add(node.stmt.expression)
                         #self.gen[node] = node.stmt.expression
+                        # Register that changes have been made
                         onechange = True
-                    # If the variable is already in the FV, check if the expression is different
-                    elif node.stmt.variable in self.FV.keys():
-                        if node.stmt.expression not in node.kill and node.stmt.expression in self.FV.values():
+                    # Check if the variable changes any generated expressions
+                    elif node.stmt.variable in self.FV.values():
+                        if node.stmt.expression not in node.kill: #and node.stmt.expression in self.FV.values():
                             node.kill.add(node.stmt.expression)
+                            # Iterating through subsequent nodes to remove the expression from their entry and exit sets
                             for nextnode in nodelist.values():
-                                if node.stmt.expression in nextnode.entry:
-                                    nextnode.entry.remove(node.stmt.expression)
-                                if node.stmt.expression in nextnode.exit:
-                                    nextnode.exit.remove(node.stmt.expression)
+                                if nextnode.label > node.label:
+                                    for expr in nextnode.entry:
+                                        if node.stmt.variable in expr:
+                                            nextnode.entry.remove(expr)
+                                    for expr in nextnode.exit:
+                                        if node.stmt.variable in expr:
+                                            nextnode.exit.remove(expr)
                             #print(list(nodelist.keys())[list(nodelist.values()).index(16)])
                             #self.FV[node.stmt.variable] = None
                             #self.kill.add(node.stmt.expression)
+                            # Register that changes have been made
                             onechange = True
                 diff = node.entry.difference(node.kill)
                 # TODO: Take node.going_out / node.coming_in into account
